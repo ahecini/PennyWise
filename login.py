@@ -1,9 +1,64 @@
 import tkinter as tk
 import ttkbootstrap as ttk
 from tkinter import messagebox
+import sqlite3
+class Database:
+    def __init__(self):
+        self.conn = sqlite3.connect('example.db')  # Creates a new database file if it doesn’t exist
+        self.conn.execute("PRAGMA foreign_keys = 1")
+        self.cursor = self.conn.cursor()
+    def createDatabase(self):
+        self.cursor.executescript("""
+                    create table `user`( 
+                        username varchar(50) PRIMARY KEY,
+                        pin varchar(50),
+                        balance float
+                    );
+                    create table `category`(
+                        name varchar(50) PRIMARY KEY
+                    );
+                    create table `transaction`(
+                        trans_id integer PRIMARY KEY,
+                        description varchar(50),
+                        amount float,
+                        income boolean,
+                        tdate date,
+                        category varchar(50),
+                        username varchar(50),
+                        FOREIGN KEY (category) REFERENCES `category`(`name`),
+                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
+                    );
+                    create table `budget`(
+                        budget_id integer primary key,
+                        amount float,
+                        category varchar(50),
+                        username varchar(50),
+                        FOREIGN KEY (`category`) REFERENCES `category`(`name`),
+                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
+                    );
+                    """)
+        self.conn.commit()
+    def dropDatabase(self):
+        self.cursor.executescript("""
+                     drop table budget;
+                     drop table `transaction`;
+                     drop table category;
+                     drop table user;
+                    """)
+        self.conn.commit()
+    def insertUser(self, data):
+        self.cursor.execute("insert into user values (?,?,?)", data)
+        self.conn.commit()
+    def isUserExist(self, data):
+        self.cursor.execute("select count(*) from user where username = ? and pin = ?", data)
+        return self.cursor.fetchall()[0][0]!=0
+    def getUserBalance(self, data):
+        self.cursor.execute("select balance from user where username = ? and pin = ?", data)
+        return self.cursor.fetchall()
 class Login(tk.Frame):
     def __init__(self, root):
         super().__init__(root, width=300, height=150) 
+        self.db = Database()
         self.config(bg="#4B41D7")
         self.place(x=50,y=115) 
         self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
@@ -19,15 +74,20 @@ class Login(tk.Frame):
         self.signup_button = ttk.Button(self, text="Sign up", bootstyle="info", width=13)
         self.signup_button.place(x=170,y=115.5) 
     def setLoginButtonCommand(self, frame, background):
-        self.login_button['command'] = lambda:self.raise_frame(frame, background)
+        self.login_button['command'] = lambda:self.login(frame, background)
     def setSignupButtonCommand(self, frame, background):
-        self.signup_button['command'] = lambda:self.raise_frame(frame, background)
-    def raise_frame(self, frame, background):
-        if self.text1.get()=='wildcat6' and self.text2.get()=='xxx' :
+        self.signup_button['command'] = lambda:self.signup(frame, background)
+    def login(self, frame, background):
+        if self.db.isUserExist((self.text1.get(),self.text2.get())) :
             background.tkraise()
             frame.tkraise()
+            self.text1['text'] = " "
+            self.text2['text'] = " "
         else:
-            messagebox.showinfo("Success", "Login successful!")
+            messagebox.showinfo("Failure", "Username not found!")
+    def signup(self, frame, background):
+        background.tkraise()
+        frame.tkraise()
     '''
     def popup(self):
         messagebox.showinfo("Success", "Login successful!")
@@ -98,4 +158,8 @@ class Main(tk.Tk):
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 if __name__ == "__main__":
     root = Main()
-    root.mainloop()
+    root.mainloop()   
+    """
+    db = Database()
+    print(db.isUserExist(('wildcat6','xxx')))
+    """
