@@ -3,9 +3,9 @@ import ttkbootstrap as ttk
 from tkinter import messagebox
 class Login(tk.Frame):
     def __init__(self, root):
-        super().__init__(root, width=300, height=150)
+        super().__init__(root, width=300, height=150) 
         self.config(bg="#4B41D7")
-        self.place(x=50,y=115)
+        self.place(x=50,y=115) 
         self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
         self.label1.place(x=16,y=0.5)
         self.label2 = ttk.Label(self, text="password", font=('Segoe UI', 12), background="#4B41D7")
@@ -15,11 +15,49 @@ class Login(tk.Frame):
         self.text2 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
         self.text2.place(x=16,y=70.5)
         self.login_button = ttk.Button(self, text="Login", bootstyle="success", width=20)
-        self.login_button.place(x=16,y=115.5)
+        self.login_button.place(x=16,y=115.5) 
         self.signup_button = ttk.Button(self, text="Sign up", bootstyle="info", width=13)
-        self.signup_button.place(x=170,y=115.5)
-    def setButtonCommand(self, frame):
-        self.login_button['command'] = lambda:frame.tkraise()
+        self.signup_button.place(x=170,y=115.5) 
+    def setLoginButtonCommand(self, frame, background):
+        self.login_button['command'] = lambda:self.raise_frame(frame, background)
+    def setSignupButtonCommand(self, frame, background):
+        self.signup_button['command'] = lambda:self.raise_frame(frame, background)
+    def raise_frame(self, frame, background):
+        if self.text1.get()=='wildcat6' and self.text2.get()=='xxx' :
+            background.tkraise()
+            frame.tkraise()
+        else:
+            messagebox.showinfo("Success", "Login successful!")
+    '''
+    def popup(self):
+        messagebox.showinfo("Success", "Login successful!")
+    '''
+class Signup(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, width=300, height=200) #150
+        self.config(bg="#4B41D7")
+        self.place(x=50,y=85) #115
+        self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
+        self.label1.place(x=16,y=0.5)
+        self.label2 = ttk.Label(self, text="password", font=('Segoe UI', 12), background="#4B41D7")
+        self.label2.place(x=16,y=50.5) 
+        self.label3 = ttk.Label(self, text="balance", font=('Segoe UI', 12), background="#4B41D7")
+        self.label3.place(x=16,y=100.5)
+        self.text1 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text1.place(x=16,y=20.5)
+        self.text2 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text2.place(x=16,y=70.5)
+        self.text3 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text3.place(x=16,y=120.5)
+        self.login_button = ttk.Button(self, text="Login", bootstyle="success", width=20)
+        #self.login_button.place(x=16,y=155.5) #115.5
+        self.signup_button = ttk.Button(self, text="Sign up", bootstyle="info", width=13)
+        self.signup_button.place(x=170,y=155.5) #115.5
+    def setSignupButtonCommand(self, frame, background):
+        self.signup_button['command'] = lambda:self.raise_frame(frame, background)
+    def raise_frame(self, frame, background):
+        background.tkraise()
+        frame.tkraise()
     '''
     def popup(self):
         messagebox.showinfo("Success", "Login successful!")
@@ -32,8 +70,11 @@ class Hello(tk.Frame):
         self.label.place(x=16,y=0.5)
         self.button = ttk.Button(self, text="back", bootstyle="success", width=20)
         self.button.place(x=70,y=115.5)
-    def setButtonCommand(self, frame):
-        self.button['command'] = lambda:frame.tkraise()
+    def setBackButtonCommand(self, frame, background):
+        self.button['command'] = lambda:self.raise_frame(frame, background)
+    def raise_frame(self, frame, background):
+        background.tkraise()
+        frame.tkraise()
 class Main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -44,10 +85,17 @@ class Main(tk.Tk):
         self.title.place(x=115,y=2)
         self.subtitle = ttk.Label(self, font=('Segoe UI',15), text="Know where your money at")
         self.subtitle.place(x=75,y=50)
+        self.frame_background = tk.Frame(self, width=300, height=200)
+        self.frame_background.config(bg="#2b3e50")
+        self.frame3 = Signup(self)
         self.frame2 = Hello(self)
+        self.frame_background.place(x=50,y=85) #115
+        self.frame_background.tkraise()
         self.frame1 = Login(self)
-        self.frame1.setButtonCommand(self.frame2)
-        self.frame2.setButtonCommand(self.frame1)
+        self.frame1.setLoginButtonCommand(self.frame2,self.frame_background)
+        self.frame2.setBackButtonCommand(self.frame1,self.frame_background)
+        self.frame3.setSignupButtonCommand(self.frame1,self.frame_background)
+        self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 if __name__ == "__main__":
     root = Main()
     root.mainloop()
