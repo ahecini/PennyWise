@@ -59,11 +59,12 @@ class Database:
         self.cursor.execute("select balance from user where username = ? and pin = ?", data)
         return self.cursor.fetchall()
 class Login(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, hello):
         super().__init__(root, width=300, height=150) 
         self.db = Database()
+        self.hello = hello
         self.config(bg="#4B41D7")
-        self.place(x=50,y=115) 
+        self.place(x=438,y=234) #50
         self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
         self.label1.place(x=16,y=0.5)
         self.label2 = ttk.Label(self, text="password", font=('Segoe UI', 12), background="#4B41D7")
@@ -82,6 +83,7 @@ class Login(tk.Frame):
         self.signup_button['command'] = lambda:self.signup(frame, background)
     def login(self, frame, background):
         if self.db.isUserExist((self.text1.get(),self.text2.get())) :
+            self.hello.setMainText(self.text1.get())
             background.tkraise()
             frame.tkraise()
         else:
@@ -98,7 +100,7 @@ class Signup(tk.Frame):
         super().__init__(root, width=300, height=200) #150
         self.db = Database()
         self.config(bg="#4B41D7")
-        self.place(x=50,y=85) #115
+        self.place(x=438,y=234) #115
         self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
         self.label1.place(x=16,y=0.5)
         self.label2 = ttk.Label(self, text="password", font=('Segoe UI', 12), background="#4B41D7")
@@ -137,8 +139,8 @@ class Signup(tk.Frame):
 class Hello(tk.Frame):
     def __init__(self, root):
         super().__init__(root,width=300, height=150)
-        self.place(x=50,y=115)
-        self.label = ttk.Label(self, text="Hello user!", font=('Segoe UI', 40))
+        self.place(x=438,y=234)
+        self.label = ttk.Label(self, text="Hello !", font=('Segoe UI', 40))
         self.label.place(x=16,y=0.5)
         self.button = ttk.Button(self, text="back", bootstyle="success", width=20)
         self.button.place(x=70,y=115.5)
@@ -147,23 +149,29 @@ class Hello(tk.Frame):
     def raise_frame(self, frame, background):
         background.tkraise()
         frame.tkraise()
+    def setMainText(self, text):
+        self.label['text'] = text
 class Main(tk.Tk):
     def __init__(self):
         super().__init__()
         self.style = ttk.Style(theme='superhero')
         self.title('Login App')
-        self.geometry('400x300')
+        self.width= self.winfo_screenwidth() 
+        self.height= self.winfo_screenheight()
+        self.geometry("%dx%d" % (self.width-200, self.height-200))
+        #400x300
+        #1366x768
         self.title = ttk.Label(self, font=('Segoe UI',25), text="PennyWise")
-        self.title.place(x=115,y=2)
+        self.title.place(x=500,y=2)
         self.subtitle = ttk.Label(self, font=('Segoe UI',15), text="Know where your money at")
-        self.subtitle.place(x=75,y=50)
+        self.subtitle.place(x=465,y=50)
         self.frame_background = tk.Frame(self, width=300, height=200)
         self.frame_background.config(bg="#2b3e50")
         self.frame3 = Signup(self)
         self.frame2 = Hello(self)
-        self.frame_background.place(x=50,y=85) #115
+        self.frame_background.place(x=438,y=234) #115
         self.frame_background.tkraise()
-        self.frame1 = Login(self)
+        self.frame1 = Login(self, self.frame2)
         self.frame1.setLoginButtonCommand(self.frame2,self.frame_background)
         self.frame2.setBackButtonCommand(self.frame1,self.frame_background)
         self.frame3.setSignupButtonCommand(self.frame1,self.frame_background)
@@ -171,7 +179,8 @@ class Main(tk.Tk):
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 if __name__ == "__main__":
     root = Main()
-    root.mainloop()   
+    root.mainloop() 
+    print(root.width, root.height)  
     """
     db = Database()
     db.startOver()
