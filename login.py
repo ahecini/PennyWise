@@ -2,6 +2,7 @@ import tkinter as tk
 import ttkbootstrap as ttk
 from tkinter import messagebox
 import sqlite3
+from PIL import Image, ImageTk
 class Database:
     def __init__(self):
         self.conn = sqlite3.connect('example.db')  # Creates a new database file if it doesn’t exist
@@ -59,10 +60,10 @@ class Database:
         self.cursor.execute("select balance from user where username = ? and pin = ?", data)
         return self.cursor.fetchall()
 class Login(tk.Frame):
-    def __init__(self, root, hello):
+    def __init__(self, root):
+        self.hello = Hello(root) 
         super().__init__(root, width=300, height=150) 
         self.db = Database()
-        self.hello = hello
         self.config(bg="#4B41D7")
         self.place(x=438,y=234) #50
         self.label1 = ttk.Label(self, text="user", font=('Segoe UI', 12), background="#4B41D7")
@@ -76,14 +77,15 @@ class Login(tk.Frame):
         self.login_button = ttk.Button(self, text="Login", bootstyle="success", width=20)
         self.login_button.place(x=16,y=115.5) 
         self.signup_button = ttk.Button(self, text="Sign up", bootstyle="info", width=13)
-        self.signup_button.place(x=170,y=115.5) 
-    def setLoginButtonCommand(self, frame, background):
-        self.login_button['command'] = lambda:self.login(frame, background)
+        self.signup_button.place(x=170,y=115.5)
+    def setLoginButtonCommand(self, background):
+        self.login_button['command'] = lambda:self.login(self.hello, background)
     def setSignupButtonCommand(self, frame, background):
         self.signup_button['command'] = lambda:self.signup(frame, background)
     def login(self, frame, background):
         if self.db.isUserExist((self.text1.get(),self.text2.get())) :
-            self.hello.setMainText(self.text1.get())
+            self.hello.setDashboard(self.text1.get())
+            self.hello.setBackButtonCommand(self, background)
             background.tkraise()
             frame.tkraise()
         else:
@@ -139,18 +141,37 @@ class Signup(tk.Frame):
 class Hello(tk.Frame):
     def __init__(self, root):
         super().__init__(root,width=300, height=150)
-        self.place(x=438,y=234)
-        self.label = ttk.Label(self, text="Hello !", font=('Segoe UI', 40))
-        self.label.place(x=16,y=0.5)
-        self.button = ttk.Button(self, text="back", bootstyle="success", width=20)
-        self.button.place(x=70,y=115.5)
+        self.root = root
     def setBackButtonCommand(self, frame, background):
         self.button['command'] = lambda:self.raise_frame(frame, background)
     def raise_frame(self, frame, background):
         background.tkraise()
         frame.tkraise()
-    def setMainText(self, text):
-        self.label['text'] = text
+    def setDashboard(self, id):
+        self.profile = ImageTk.PhotoImage(Image.open('profile.png'))
+        self.off = ImageTk.PhotoImage(Image.open('off.png'))
+        #self.off.resize((60,60), Image.ANTIALIAS)
+        #self.profile = tk.PhotoImage("profile.png")
+        self.place(x=438,y=234)
+        self.left_window = tk.Frame(self.root, width=300, height=768)
+        self.left_window.config(bg="#46919e")
+        self.left_window.place(x=0,y=0)
+        self.label = ttk.Label(self.left_window, text= id, font=('Segoe UI', 40), background="#46919e")
+        self.label.place(x=80,y=0.5)
+        self.button = tk.Button(self.left_window, image=self.off, height=50 ,width=50 ,borderwidth=0)
+        self.button.config(bg="#46919e")
+        self.button.place(x=220,y=15)
+        self.labelProfile = tk.Label(self.left_window, image=self.profile, height=50 ,width=50 ,borderwidth=0)
+        self.labelProfile.config(bg="#46919e")
+        self.labelProfile.place(x=20,y=15)
+        self.buttonViewTransaction = ttk.Button(self.left_window, text="view transaction", bootstyle="info", width=30)
+        self.buttonViewTransaction.place(x=50,y=120)
+        self.buttonAddTransaction = ttk.Button(self.left_window, text="add transaction", bootstyle="info", width=30)
+        self.buttonAddTransaction.place(x=50,y=170)
+        self.buttonViewBudget = ttk.Button(self.left_window, text="view budget", bootstyle="info", width=30)
+        self.buttonViewBudget.place(x=50,y=220)
+        self.buttonViewReport = ttk.Button(self.left_window, text="view report", bootstyle="info", width=30)
+        self.buttonViewReport.place(x=50,y=270)
 class Main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -168,12 +189,12 @@ class Main(tk.Tk):
         self.frame_background = tk.Frame(self, width=300, height=200)
         self.frame_background.config(bg="#2b3e50")
         self.frame3 = Signup(self)
-        self.frame2 = Hello(self)
+        
         self.frame_background.place(x=438,y=234) #115
         self.frame_background.tkraise()
-        self.frame1 = Login(self, self.frame2)
-        self.frame1.setLoginButtonCommand(self.frame2,self.frame_background)
-        self.frame2.setBackButtonCommand(self.frame1,self.frame_background)
+        self.frame1 = Login(self)
+        self.frame1.setLoginButtonCommand(self.frame_background)
+        #self.frame2.setBackButtonCommand(self.frame1,self.frame_background)
         self.frame3.setSignupButtonCommand(self.frame1,self.frame_background)
         self.frame3.setLoginButtonCommand(self.frame1,self.frame_background)
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
