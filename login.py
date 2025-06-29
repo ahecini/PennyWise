@@ -16,7 +16,8 @@ class Database:
                         balance float
                     );
                     create table `category`(
-                        name varchar(50) PRIMARY KEY
+                        name varchar(50) PRIMARY KEY,
+                        colour varcher(7)
                     );
                     create table `transaction`(
                         trans_id integer PRIMARY KEY,
@@ -86,8 +87,8 @@ class Login(tk.Frame):
         if self.db.isUserExist((self.text1.get(),self.text2.get())) :
             self.hello.setDashboard(self.text1.get())
             self.hello.setBackButtonCommand(self, background)
-            background.tkraise()
-            frame.tkraise()
+            #background.tkraise()
+            #frame.tkraise()
         else:
             messagebox.showinfo("Failure", "Username not found!")
     def signup(self, frame, background):
@@ -164,14 +165,169 @@ class Hello(tk.Frame):
         self.labelProfile = tk.Label(self.left_window, image=self.profile, height=50 ,width=50 ,borderwidth=0)
         self.labelProfile.config(bg="#46919e")
         self.labelProfile.place(x=20,y=15)
-        self.buttonViewTransaction = ttk.Button(self.left_window, text="view transaction", bootstyle="info", width=30)
+        self.buttonViewTransaction = ttk.Button(self.left_window, text="Transactions", bootstyle="info", width=30)
         self.buttonViewTransaction.place(x=50,y=120)
-        self.buttonAddTransaction = ttk.Button(self.left_window, text="add transaction", bootstyle="info", width=30)
+        self.buttonAddTransaction = ttk.Button(self.left_window, text="Budget", bootstyle="info", width=30)
         self.buttonAddTransaction.place(x=50,y=170)
-        self.buttonViewBudget = ttk.Button(self.left_window, text="view budget", bootstyle="info", width=30)
+        self.buttonViewBudget = ttk.Button(self.left_window, text="Report", bootstyle="info", width=30)
         self.buttonViewBudget.place(x=50,y=220)
+        """
         self.buttonViewReport = ttk.Button(self.left_window, text="view report", bootstyle="info", width=30)
         self.buttonViewReport.place(x=50,y=270)
+        """
+        # Main interface:
+        self.mainBackground = MainBackground(self.root)
+class MainBackground(tk.Frame):
+    def __init__(self, root):
+        self.root = root
+        super().__init__(self.root, width=1066, height=768)
+        self.config(bg="#2b3e50")
+        self.place(x=300,y=0)
+        self.transactionView = TransactionView(self)
+        self.background = tk.Frame(self, width=1066, height=768)
+        self.background.config(bg="#2b3e50")
+        self.background.place(x=0,y=0)
+        self.transactionAdd = TransactionAdd(self)
+        self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
+        self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
+class TransactionAdd(tk.Frame):
+    """
+    TransactionAdd constructor method
+    """
+    def __init__(self, root):
+        # Parent attributes initialization
+        self.root = root
+        super().__init__(self.root, width=300, height=300)
+
+        # Configuring and placing the frame
+        self.config(bg="#4B41D7")
+        self.place(x=300,y=134) #115
+
+        # Date area
+        self.label1 = ttk.Label(self, text="Date", font=('Segoe UI', 12), background="#4B41D7")
+        self.label1.place(x=16,y=0.5)
+        self.text1 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text1.place(x=16,y=20.5)
+
+        # Amount area
+        self.label2 = ttk.Label(self, text="Amount", font=('Segoe UI', 12), background="#4B41D7")
+        self.label2.place(x=16,y=50.5) 
+        self.text2 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text2.place(x=16,y=70.5)
+
+        # Category area
+        self.label3 = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
+        self.label3.place(x=16,y=100.5)
+        self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
+        self.category_ValueInside = tk.StringVar(self)
+        self.category_ValueInside.set("Expense")
+        self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options)
+        self.category_QuestionMenu.place(x=16,y=123.5)
+
+        # Description label
+        self.label4 = ttk.Label(self, text="Description", font=('Segoe UI', 12), background="#4B41D7")
+        self.label4.place(x=16,y=153.5)
+        self.text4 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.text4.place(x=16,y=173.5)
+
+        # Income/Expense label
+        self.label5 = ttk.Label(self, text="Income/Expense", font=('Segoe UI', 12), background="#4B41D7")
+        self.label5.place(x=16,y=203.5)
+        self.incomeExpense_Options = ["Income", "Expense", "Income"]
+        self.incomeExpense_ValueInside = tk.StringVar(self)
+        self.incomeExpense_ValueInside.set("Expense")
+        self.incomeExpense_QuestionMenu = ttk.OptionMenu(self, self.incomeExpense_ValueInside, *self.incomeExpense_Options)
+        self.incomeExpense_QuestionMenu.place(x=16,y=226.5)
+
+        # AddTransaction button
+        self.AddTransactionButton = ttk.Button(self, text="Add transaction", bootstyle="success", width=15)
+        self.AddTransactionButton.place(x=16,y=260.5) #115.5
+
+        # ViewTransaction button
+        self.ViewTransactionButton = ttk.Button(self, text="View transactions", bootstyle="info", width=18)
+        self.ViewTransactionButton.place(x=140,y=260.5) #115.5
+
+    """
+    changeFrame: Method to switch to another frame
+    """
+    def changeFrame(self, background, frame):
+        background.tkraise()
+        frame.tkraise()
+
+    """
+    setViewTransactionButton: Method to set which frame to switch to in changeFrame
+    """
+    def setViewTransactionButton(self, background, frame):
+        self.ViewTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+class TransactionView(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, width=504, height=225)
+        self.config(bg="#2b3e50")
+        self.place(x=200,y=180) #115
+        self.table = ttk.Treeview(self)
+
+        # Define the columns
+        self.table['columns'] = ('Date', 'Type', 'Amount', 'Category', 'Description')
+
+        # Format the columns
+        self.table.column('#0', width=0, stretch=tk.NO)
+        self.table.column('Date', anchor=tk.W, width=100)
+        self.table.column('Type', anchor=tk.W, width=100)
+        self.table.column('Amount', anchor=tk.W, width=100)
+        self.table.column('Category', anchor=tk.W, width=100)
+        self.table.column('Description', anchor=tk.W, width=100)
+
+        # Create the headings
+        self.table.heading('#0', text='', anchor=tk.W)
+        self.table.heading('Date', text='Date', anchor=tk.W)
+        self.table.heading('Type', text='Type', anchor=tk.W)
+        self.table.heading('Amount', text='Amount', anchor=tk.W)
+        self.table.heading('Category', text='Category', anchor=tk.W)
+        self.table.heading('Description', text='Description', anchor=tk.W)
+
+        # Sample data
+        self.data = [
+            ('07/07/2025', 'Income', 300.01, 'Shopping', 'groceries'),
+            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest'),
+            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest')
+        ]
+
+        # Configure alternating row colors
+        '''
+        self.table.tag_configure('oddrow', background="#5F07EC")
+        self.table.tag_configure('evenrow', background="#082470")
+        '''
+
+        # Configure alternating row colors
+        self.table.tag_configure('Income', background="#29BB15")
+        self.table.tag_configure('Expanse', background="#FA0808")
+
+        # Add data with alternating row colors
+        '''
+        for i in range(len(self.data)):
+            if i % 2 == 0:
+                self.table.insert(parent='', index=i, values=self.data[i], tags=('evenrow',))
+            else:
+                self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
+        '''
+
+        # Add data with alternating row colors
+        for i in range(len(self.data)):
+            self.table.insert(parent='', index=i, values=self.data[i], tags=(self.data[i][1],))
+            
+        # Pack the table
+        #self.table.pack(expand=True, fill=tk.BOTH)
+        self.table.place(x=0,y=0)
+
+        # Go to add transaction interface
+        self.AddTransactionButton = ttk.Button(self, text="Add transaction", bootstyle="success", width=15)
+        self.AddTransactionButton.place(x=16,y=187.5) #115.5
+
+    def changeFrame(self, background, frame):
+        background.tkraise()
+        frame.tkraise()
+    def setAddTransactionButton(self, background, frame):
+        self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 class Main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -199,12 +355,13 @@ class Main(tk.Tk):
         self.frame3.setLoginButtonCommand(self.frame1,self.frame_background)
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 if __name__ == "__main__":
+    
     root = Main()
     root.mainloop() 
-    print(root.width, root.height)  
-    """
+    #print(root.width, root.height)  
+    '''
     db = Database()
     db.startOver()
-    """
+    '''
     #print(db.isUserExist(('wildcat6','xxx')))
 
