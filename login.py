@@ -3,6 +3,7 @@ import ttkbootstrap as ttk
 from tkinter import messagebox
 import sqlite3
 from PIL import Image, ImageTk
+import datetime
 class Database:
     def __init__(self):
         self.conn = sqlite3.connect('example.db')  # Creates a new database file if it doesn’t exist
@@ -195,6 +196,9 @@ class TransactionAdd(tk.Frame):
     TransactionAdd constructor method
     """
     def __init__(self, root):
+        
+        self.add = ImageTk.PhotoImage(Image.open('add.png'))
+
         # Parent attributes initialization
         self.root = root
         super().__init__(self.root, width=300, height=300)
@@ -203,41 +207,73 @@ class TransactionAdd(tk.Frame):
         self.config(bg="#4B41D7")
         self.place(x=300,y=134) #115
 
-        # Date area
-        self.label1 = ttk.Label(self, text="Date", font=('Segoe UI', 12), background="#4B41D7")
-        self.label1.place(x=16,y=0.5)
-        self.text1 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
-        self.text1.place(x=16,y=20.5)
-
         # Amount area
-        self.label2 = ttk.Label(self, text="Amount", font=('Segoe UI', 12), background="#4B41D7")
-        self.label2.place(x=16,y=50.5) 
-        self.text2 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
-        self.text2.place(x=16,y=70.5)
+        self.amountLabel = ttk.Label(self, text="Amount", font=('Segoe UI', 12), background="#4B41D7")
+        self.amountLabel.place(x=16,y=0.5)
+        self.amountText = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.amountText.place(x=16,y=30.5)
+
+        # Description area
+        self.descriptionLabel = ttk.Label(self, text="Description", font=('Segoe UI', 12), background="#4B41D7")
+        self.descriptionLabel.place(x=16,y=60.5) 
+        self.descriptionText = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.descriptionText.place(x=16,y=90.5)
+
+        # Date area
+        self.today = datetime.datetime.now() # Today's date
+
+        self.dateLabel = ttk.Label(self, text="Date", font=('Segoe UI', 12), background="#4B41D7")
+        self.dateLabel.place(x=16,y=120.5)
+
+        # Day spinbox
+        self.day_ValueInside = tk.StringVar(self)
+        self.day_ValueInside.set(self.today.day)
+        self.daySpinbox = ttk.Spinbox(self, from_=1, to=30, width=5, textvariable=self.day_ValueInside)
+        self.daySpinbox.place(x=16,y=150.5)
+
+        # first anti-slash
+        self.antislachLabel1 = ttk.Label(self, text="/", font=('Segoe UI', 12), background="#4B41D7")
+        self.antislachLabel1.place(x=92,y=150.5)
+
+        # Month spinbox
+        self.month_ValueInside = tk.StringVar(self)
+        self.month_ValueInside.set(self.today.month)
+        self.monthSpinbox = ttk.Spinbox(self, from_=1, to=12, width=5, textvariable=self.month_ValueInside)
+        self.monthSpinbox.place(x=110,y=150.5)
+
+        # second anti-slash
+        self.antislachLabel2 = ttk.Label(self, text="/", font=('Segoe UI', 12), background="#4B41D7")
+        self.antislachLabel2.place(x=186,y=150.5)
+
+        # Year spinbox
+        self.year_ValueInside = tk.StringVar(self)
+        self.year_ValueInside.set(self.today.year)
+        self.yearSpinbox = ttk.Spinbox(self, from_=2025, to=2026, width=5, textvariable=self.year_ValueInside)
+        self.yearSpinbox.place(x=200,y=150.5)
 
         # Category area
-        self.label3 = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
-        self.label3.place(x=16,y=100.5)
+        self.categoryLabel = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
+        self.categoryLabel.place(x=16,y=183.5)
         self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
         self.category_ValueInside = tk.StringVar(self)
         self.category_ValueInside.set("Expense")
-        self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options)
-        self.category_QuestionMenu.place(x=16,y=123.5)
+        self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options, bootstyle="dark")
+        self.category_QuestionMenu.place(x=16,y=215.5)
+        self.AddCategoryButton = ttk.Button(self, text="+", bootstyle="success", width=1)
+        
+        self.addCategoryButton = tk.Button(self, image=self.add, height=15 ,width=15 ,borderwidth=0)
+        self.addCategoryButton.config(bg="#4B41D7")
+        self.addCategoryButton.place(x=85,y=188.5)
+        #self.AddCategoryButton.place(x=85,y=183.5) #115.5
 
-        # Description label
-        self.label4 = ttk.Label(self, text="Description", font=('Segoe UI', 12), background="#4B41D7")
-        self.label4.place(x=16,y=153.5)
-        self.text4 = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
-        self.text4.place(x=16,y=173.5)
-
-        # Income/Expense label
-        self.label5 = ttk.Label(self, text="Income/Expense", font=('Segoe UI', 12), background="#4B41D7")
-        self.label5.place(x=16,y=203.5)
+        # Income/Expense area
+        self.incomeExpenselabel = ttk.Label(self, text="Income/Expense", font=('Segoe UI', 12), background="#4B41D7")
+        self.incomeExpenselabel.place(x=150,y=183.5)
         self.incomeExpense_Options = ["Income", "Expense", "Income"]
         self.incomeExpense_ValueInside = tk.StringVar(self)
         self.incomeExpense_ValueInside.set("Expense")
-        self.incomeExpense_QuestionMenu = ttk.OptionMenu(self, self.incomeExpense_ValueInside, *self.incomeExpense_Options)
-        self.incomeExpense_QuestionMenu.place(x=16,y=226.5)
+        self.incomeExpense_QuestionMenu = ttk.OptionMenu(self, self.incomeExpense_ValueInside, *self.incomeExpense_Options, bootstyle="dark")
+        self.incomeExpense_QuestionMenu.place(x=160,y=215.5)
 
         # AddTransaction button
         self.AddTransactionButton = ttk.Button(self, text="Add transaction", bootstyle="success", width=15)
@@ -358,6 +394,7 @@ if __name__ == "__main__":
     
     root = Main()
     root.mainloop() 
+    #x = datetime.datetime.now()
     #print(root.width, root.height)  
     '''
     db = Database()
