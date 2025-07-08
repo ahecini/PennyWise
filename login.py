@@ -184,6 +184,7 @@ class MainBackground(tk.Frame):
         super().__init__(self.root, width=1066, height=768)
         self.config(bg="#2b3e50")
         self.place(x=300,y=0)
+        '''
         self.transactionView = TransactionView(self)
         self.background = tk.Frame(self, width=1066, height=768)
         self.background.config(bg="#2b3e50")
@@ -191,6 +192,10 @@ class MainBackground(tk.Frame):
         self.transactionAdd = TransactionAdd(self)
         self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
         self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
+        '''
+        self.budgetView = BudgetView(self)
+        
+
 class TransactionAdd(tk.Frame):
     """
     TransactionAdd constructor method
@@ -358,6 +363,93 @@ class TransactionView(tk.Frame):
         # Go to add transaction interface
         self.AddTransactionButton = ttk.Button(self, text="Add transaction", bootstyle="success", width=15)
         self.AddTransactionButton.place(x=16,y=187.5) #115.5
+
+    def changeFrame(self, background, frame):
+        background.tkraise()
+        frame.tkraise()
+    def setAddTransactionButton(self, background, frame):
+        self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+class BudgetView(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, width=504, height=225)
+        self.config(bg="#2b3e50")
+        self.place(x=200,y=180) #115
+        self.table = ttk.Treeview(self)
+
+        # Define the columns
+        self.table['columns'] = ('Category', 'Budget')
+
+        # Format the columns
+        self.table.column('#0', width=0, stretch=tk.NO)
+        self.table.column('Category', anchor=tk.W, width=100)
+        self.table.column('Budget', anchor=tk.W, width=100)
+
+        # Create the headings
+        self.table.heading('#0', text='', anchor=tk.W)
+        self.table.heading('Category', text='Category', anchor=tk.W)
+        self.table.heading('Budget', text='Budget', anchor=tk.W)
+
+        # Sample data
+        self.data = [
+            ('Shopping', 300.01),
+            ('Car', 10.01),
+            ('Groceries', 10.01)
+        ]
+
+        # Configure alternating row colors
+        '''
+        self.table.tag_configure('oddrow', background="#5F07EC")
+        self.table.tag_configure('evenrow', background="#082470")
+        '''
+
+        # Configure alternating row colors
+        self.table.tag_configure('Income', background="#29BB15")
+        self.table.tag_configure('Expanse', background="#FA0808")
+
+        # Add data with alternating row colors
+        '''
+        for i in range(len(self.data)):
+            if i % 2 == 0:
+                self.table.insert(parent='', index=i, values=self.data[i], tags=('evenrow',))
+            else:
+                self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
+        '''
+
+        # Add data with alternating row colors
+        for i in range(len(self.data)):
+            self.table.insert(parent='', index=i, values=self.data[i], tags=("Expanse",))
+            
+        # Pack the table
+        #self.table.pack(expand=True, fill=tk.BOTH)
+        self.table.place(x=0,y=0)
+
+        # Go to add transaction interface
+        self.AddTransactionButton = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
+        self.AddTransactionButton.place(x=0,y=187.5) #115.5
+
+        # Frame carrying the form to modify the budget
+        # The main Frame
+        self.modifyInterface = tk.Frame(self, width=200, height=185)
+        self.modifyInterface.config(bg="#4B41D7")
+        self.modifyInterface.place(x=250,y=0) #115
+
+        # Category area
+        self.categoryLabel = ttk.Label(self.modifyInterface, text="Category", font=('Segoe UI', 12), background="#4B41D7")
+        self.categoryLabel.place(x=16,y=0.5) 
+        self.categoryText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
+        self.categoryText.place(x=16,y=30.5)
+        self.categoryText.config(state=tk.DISABLED)
+
+        # Budget area
+        self.budgetLabel = ttk.Label(self.modifyInterface, text="Budget", font=('Segoe UI', 12), background="#4B41D7")
+        self.budgetLabel.place(x=16,y=60.5) 
+        self.budgetText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
+        self.budgetText.place(x=16,y=90.5)
+
+        # Approve button 
+        self.approveButton = ttk.Button(self.modifyInterface, text="Approve", bootstyle="success", width=20)
+        self.approveButton.place(x=25,y=140.5) #115.5
+        self.approveButton.config(state=tk.DISABLED)
 
     def changeFrame(self, background, frame):
         background.tkraise()
