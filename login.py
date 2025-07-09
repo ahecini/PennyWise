@@ -4,6 +4,7 @@ from tkinter import messagebox
 import sqlite3
 from PIL import Image, ImageTk
 import datetime
+
 class Database:
     def __init__(self):
         self.conn = sqlite3.connect('example.db')  # Creates a new database file if it doesn’t exist
@@ -61,6 +62,7 @@ class Database:
     def getUserBalance(self, data):
         self.cursor.execute("select balance from user where username = ? and pin = ?", data)
         return self.cursor.fetchall()
+
 class Login(tk.Frame):
     def __init__(self, root):
         self.hello = Hello(root) 
@@ -99,6 +101,7 @@ class Login(tk.Frame):
     def popup(self):
         messagebox.showinfo("Success", "Login successful!")
     '''
+
 class Signup(tk.Frame):
     def __init__(self, root):
         super().__init__(root, width=300, height=200) #150
@@ -140,61 +143,6 @@ class Signup(tk.Frame):
     def popup(self):
         messagebox.showinfo("Success", "Login successful!")
     '''
-class Hello(tk.Frame):
-    def __init__(self, root):
-        super().__init__(root,width=300, height=150)
-        self.root = root
-    def setBackButtonCommand(self, frame, background):
-        self.button['command'] = lambda:self.raise_frame(frame, background)
-    def raise_frame(self, frame, background):
-        background.tkraise()
-        frame.tkraise()
-    def setDashboard(self, id):
-        self.profile = ImageTk.PhotoImage(Image.open('profile.png'))
-        self.off = ImageTk.PhotoImage(Image.open('off.png'))
-        #self.off.resize((60,60), Image.ANTIALIAS)
-        #self.profile = tk.PhotoImage("profile.png")
-        self.place(x=438,y=234)
-        self.left_window = tk.Frame(self.root, width=300, height=768)
-        self.left_window.config(bg="#46919e")
-        self.left_window.place(x=0,y=0)
-        self.label = ttk.Label(self.left_window, text= id, font=('Segoe UI', 40), background="#46919e")
-        self.label.place(x=80,y=0.5)
-        self.button = tk.Button(self.left_window, image=self.off, height=50 ,width=50 ,borderwidth=0)
-        self.button.config(bg="#46919e")
-        self.button.place(x=220,y=15)
-        self.labelProfile = tk.Label(self.left_window, image=self.profile, height=50 ,width=50 ,borderwidth=0)
-        self.labelProfile.config(bg="#46919e")
-        self.labelProfile.place(x=20,y=15)
-        self.buttonViewTransaction = ttk.Button(self.left_window, text="Transactions", bootstyle="info", width=30)
-        self.buttonViewTransaction.place(x=50,y=120)
-        self.buttonAddTransaction = ttk.Button(self.left_window, text="Budget", bootstyle="info", width=30)
-        self.buttonAddTransaction.place(x=50,y=170)
-        self.buttonViewBudget = ttk.Button(self.left_window, text="Report", bootstyle="info", width=30)
-        self.buttonViewBudget.place(x=50,y=220)
-        """
-        self.buttonViewReport = ttk.Button(self.left_window, text="view report", bootstyle="info", width=30)
-        self.buttonViewReport.place(x=50,y=270)
-        """
-        # Main interface:
-        self.mainBackground = MainBackground(self.root)
-class MainBackground(tk.Frame):
-    def __init__(self, root):
-        self.root = root
-        super().__init__(self.root, width=1066, height=768)
-        self.config(bg="#2b3e50")
-        self.place(x=300,y=0)
-        '''
-        self.transactionView = TransactionView(self)
-        self.background = tk.Frame(self, width=1066, height=768)
-        self.background.config(bg="#2b3e50")
-        self.background.place(x=0,y=0)
-        self.transactionAdd = TransactionAdd(self)
-        self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
-        self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
-        '''
-        self.budgetView = BudgetView(self)
-        
 
 class TransactionAdd(tk.Frame):
     """
@@ -300,6 +248,7 @@ class TransactionAdd(tk.Frame):
     """
     def setViewTransactionButton(self, background, frame):
         self.ViewTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+
 class TransactionView(tk.Frame):
     def __init__(self, root):
         super().__init__(root, width=504, height=225)
@@ -369,6 +318,7 @@ class TransactionView(tk.Frame):
         frame.tkraise()
     def setAddTransactionButton(self, background, frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+
 class BudgetView(tk.Frame):
     def __init__(self, root):
         super().__init__(root, width=504, height=225)
@@ -456,6 +406,108 @@ class BudgetView(tk.Frame):
         frame.tkraise()
     def setAddTransactionButton(self, background, frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+
+class MainBackground(tk.Frame):
+    def __init__(self, root):
+
+        # Setting up the main frame
+        self.root = root
+        super().__init__(self.root, width=1066, height=768)
+        self.config(bg="#2b3e50")
+        self.place(x=300,y=0)
+
+        # Placing the budget option frame
+        self.budgetView = BudgetView(self)
+
+        # Placing the background
+        self.background = tk.Frame(self, width=1066, height=768)
+        self.background.config(bg="#2b3e50")
+        self.background.place(x=0,y=0)
+        
+        # Placing the transaction option frame
+        self.transactionView = TransactionView(self)
+        self.background.tkraise()
+
+        # Allowing switch between transaction frames
+        self.transactionAdd = TransactionAdd(self)
+        self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
+        self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
+
+        # Starting screen
+        self.background.tkraise()
+
+    # Method for bringing the transaction interface upfront
+    def showTransaction(self):
+        self.background.tkraise()
+        self.transactionView.tkraise()
+        self.background.tkraise()
+        self.transactionAdd.tkraise()
+
+    # Method for bringing the budget interface upfront
+    def showBudget(self):
+        self.background.tkraise()
+        self.budgetView.tkraise()
+
+class Hello(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root,width=300, height=150)
+        self.root = root
+    def setBackButtonCommand(self, frame, background):
+        self.button['command'] = lambda:self.raise_frame(frame, background)
+    def raise_frame(self, frame, background):
+        background.tkraise()
+        frame.tkraise()
+    def setDashboard(self, id):
+
+        # Importing the profile and exit icons
+        self.profile = ImageTk.PhotoImage(Image.open('profile.png'))
+        self.off = ImageTk.PhotoImage(Image.open('off.png'))
+
+        # Placing the frame
+        self.place(x=438,y=234)
+
+        # Left window area
+        self.left_window = tk.Frame(self.root, width=300, height=768)
+        self.left_window.config(bg="#46919e")
+        self.left_window.place(x=0,y=0)
+
+        # Main interface:
+        self.mainBackground = MainBackground(self.root) 
+
+        # Username label
+        self.label = ttk.Label(self.left_window, text=id, font=('Segoe UI', 40), background="#46919e")
+        self.label.place(x=80,y=0.5)
+
+        # Disconnect button
+        self.button = tk.Button(self.left_window, image=self.off, height=50 ,width=50 ,borderwidth=0)
+        self.button.config(bg="#46919e")
+        self.button.place(x=220,y=15)
+
+        # Profile picture
+        self.labelProfile = tk.Label(self.left_window, image=self.profile, height=50 ,width=50 ,borderwidth=0)
+        self.labelProfile.config(bg="#46919e")
+        self.labelProfile.place(x=20,y=15)
+
+        # Button area
+        # Transaction button
+        self.buttonTransaction = ttk.Button(self.left_window, text="Transactions", bootstyle="info", width=30)
+        self.buttonTransaction['command'] = lambda:self.mainBackground.showTransaction()
+        self.buttonTransaction.place(x=50,y=120)
+
+        # Budget button
+        self.buttonBudget = ttk.Button(self.left_window, text="Budget", bootstyle="info", width=30)
+        self.buttonBudget['command'] = lambda:self.mainBackground.showBudget()
+        self.buttonBudget.place(x=50,y=170)
+
+        #Report button
+        self.buttonReport = ttk.Button(self.left_window, text="Report", bootstyle="info", width=30)
+        self.buttonReport.place(x=50,y=220)
+
+        """
+        self.buttonViewReport = ttk.Button(self.left_window, text="view report", bootstyle="info", width=30)
+        self.buttonViewReport.place(x=50,y=270)
+        """       
+
 class Main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -482,6 +534,7 @@ class Main(tk.Tk):
         self.frame3.setSignupButtonCommand(self.frame1,self.frame_background)
         self.frame3.setLoginButtonCommand(self.frame1,self.frame_background)
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
+
 if __name__ == "__main__":
     
     root = Main()
