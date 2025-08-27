@@ -6,11 +6,21 @@ from PIL import Image, ImageTk
 import datetime
 
 class Database:
+
+    """
+    Constructor used to create the database object.
+    """
     def __init__(self):
         self.conn = sqlite3.connect('example.db')  # Creates a new database file if it doesn’t exist
         self.conn.execute("PRAGMA foreign_keys = 1")
         self.cursor = self.conn.cursor()
+
+    """
+    Private method : creates the database's tables for the application
+    """
     def __createDatabase(self):
+
+        # Execute the script that creates all the tables necessary for the database
         self.cursor.executescript("""
                     create table `user`( 
                         username varchar(50) PRIMARY KEY,
@@ -25,8 +35,8 @@ class Database:
                         trans_id integer PRIMARY KEY,
                         description varchar(50),
                         amount float,
-                        income boolean,
-                        tdate date,
+                        ttype text,
+                        tdate text,
                         category varchar(50),
                         username varchar(50),
                         FOREIGN KEY (category) REFERENCES `category`(`name`),
@@ -41,27 +51,159 @@ class Database:
                         FOREIGN KEY (`username`) REFERENCES `user`(`username`)
                     );
                     """)
+        
+        # Commit the changes made to the database
+        self.insertCategory(("car","#1536f3"))
+        self.insertCategory(("shopping","#27f315"))
         self.conn.commit()
+
+    """
+    Private method : drops all the tables in the database
+    """
     def __dropDatabase(self):
+
+        # Execute the script that drops all the tables necessary for the database
         self.cursor.executescript("""
                      drop table budget;
                      drop table `transaction`;
                      drop table category;
                      drop table user;
                     """)
+        
+        # Commit the changes made to the database
         self.conn.commit()
+
+    """
+    Method : deletes and recreates all the tables in the database
+    """
     def startOver(self):
+
         self.__dropDatabase()
         self.__createDatabase()
+
+    """
+    Method : inserts a user in the `user` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the user.
+    Returns : void.
+    """
     def insertUser(self, data):
+
+        # Execute the script that inserts a user with the needed data
         self.cursor.execute("insert into user values (?,?,?)", data)
+
+        # Commit the changes made to the database
         self.conn.commit()
+
+    """
+    Method : checks if a user in the `user` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the user.
+    Returns : boolean.
+    """  
     def isUserExist(self, data):
+
+        # Execute the script that searches for specific user
         self.cursor.execute("select count(*) from user where username = ? and pin = ?", data)
+
+        # Returns True if the user is found, otherwise it returns False
         return self.cursor.fetchall()[0][0]!=0
+    
+    """
+    Method : gets the balance of a user in the `balance` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the user.
+    Returns : float.
+    """  
     def getUserBalance(self, data):
-        self.cursor.execute("select balance from user where username = ? and pin = ?", data)
+
+        # Execute the script that searches for a specific user's balance
+        self.cursor.execute("select balance from user where username = ?", data)
+
+        # Returns the corresponding budget
         return self.cursor.fetchall()
+    
+    """
+    Method : updates the balance of a user in the `balance` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the user and the amount to add/substract of the current balance.
+    Returns : float.
+    """  
+    def setUserBalance(self, data):
+
+        # Execute the script that searches for a specific user's balance
+        self.cursor.execute("update user set balance = ? where username = ?", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+    
+    """
+    Method : inserts a category in the `category` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the category to insert.
+    Returns : void.
+    """
+    def insertCategory(self, data):
+
+        # Execute the script that inserts a category
+        self.cursor.execute("insert into category values (?,?)", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
+
+    """
+    Method : gets all usernames from the `user` table.
+    Returns : string[].
+    """  
+    def getUsernames(self):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select username from user")
+
+        # Returns a list of strings
+        return self.cursor.fetchall()  
+    
+    """
+    Method : gets all category names from the `category` table.
+    Returns : string[].
+    """  
+    def getCategories(self):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select name from category")
+
+        # Returns a list of strings
+        return self.cursor.fetchall()   
+
+    """
+    Method : inserts a transaction in the `transaction` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the transaction to insert.
+    Returns : void.
+    """
+    def insertTransaction(self, data):     
+
+        # Execute the script that inserts a category
+        self.cursor.execute("insert into `transaction`(description,amount,ttype,tdate,category,username) values (?,?,?,?,?,?)", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
+
+    """
+    Method : gets all transactions from the `transaction` table.
+    Returns : string[].
+    """  
+    def getTransactions(self, username):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select tdate,ttype,amount,category,description from `transaction` where `username`=?", username)
+
+        # Returns a list of strings
+        return self.cursor.fetchall()   
 
 class Login(tk.Frame):
     def __init__(self, root):
@@ -148,8 +290,11 @@ class TransactionAdd(tk.Frame):
     """
     TransactionAdd constructor method
     """
-    def __init__(self, root):
-        
+    def __init__(self, root, id):
+
+        self.root = root
+        self.id = id
+        self.db = Database()
         self.add = ImageTk.PhotoImage(Image.open('add.png'))
 
         # Parent attributes initialization
@@ -181,7 +326,7 @@ class TransactionAdd(tk.Frame):
         # Day spinbox
         self.day_ValueInside = tk.StringVar(self)
         self.day_ValueInside.set(self.today.day)
-        self.daySpinbox = ttk.Spinbox(self, from_=1, to=30, width=5, textvariable=self.day_ValueInside)
+        self.daySpinbox = ttk.Spinbox(self, from_=1, to=31, width=5, textvariable=self.day_ValueInside)
         self.daySpinbox.place(x=16,y=150.5)
 
         # first anti-slash
@@ -207,7 +352,9 @@ class TransactionAdd(tk.Frame):
         # Category area
         self.categoryLabel = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=16,y=183.5)
-        self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
+        #self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
+        self.category_Options = [self.db.getCategories()[i][0] for i in range(len(self.db.getCategories()))]
+        self.category_Options.insert(0,self.category_Options[0])
         self.category_ValueInside = tk.StringVar(self)
         self.category_ValueInside.set("Expense")
         self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options, bootstyle="dark")
@@ -231,7 +378,7 @@ class TransactionAdd(tk.Frame):
         # AddTransaction button
         self.AddTransactionButton = ttk.Button(self, text="Add transaction", bootstyle="success", width=15)
         self.AddTransactionButton.place(x=16,y=260.5) #115.5
-
+        self.AddTransactionButton['command'] = lambda:self.printFormInfos()
         # ViewTransaction button
         self.ViewTransactionButton = ttk.Button(self, text="View transactions", bootstyle="info", width=18)
         self.ViewTransactionButton.place(x=140,y=260.5) #115.5
@@ -249,10 +396,45 @@ class TransactionAdd(tk.Frame):
     def setViewTransactionButton(self, background, frame):
         self.ViewTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
+    def printFormInfos(self):
+        try:
+            amount = float(self.amountText.get())
+            amountIsValid = True
+        except:
+            amountIsValid = False
+        description = self.descriptionText.get()
+        day = self.day_ValueInside.get()
+        month = self.month_ValueInside.get()
+        year = self.year_ValueInside.get()
+        date = day+"-"+month+"-"+year
+        ttype = self.incomeExpense_ValueInside.get()
+        category = self.category_ValueInside.get()
+
+        descriptionIsValid = description.replace(" ", "")!=""
+        date1 = day=="31" and (month in ["2", "4", "6", "9", "11"])
+        date2 = day=="30" and month=="2"
+        date3 = day=="29" and month=="2" and int(year)%4!=0
+        dateIsValid = not date1 and not date2 and not date3
+
+        if(not amountIsValid):
+            messagebox.showinfo("Failure", "Please insert a valid amount!")
+        elif(not descriptionIsValid):
+            messagebox.showinfo("Failure", "Please insert a valid description!")
+        elif(not dateIsValid):
+            messagebox.showinfo("Failure", "Please insert a valid date!")
+        else:
+            messagebox.showinfo("Success", "Transaction added successfully!")
+            self.db.insertTransaction((description,amount,ttype,date,category,self.id))
+            self.root.refresh()
+            operationType = (-1)**int(bin(ttype=="Expense")[2:])
+            self.root.updateBalance(operationType*amount)
+
 class TransactionView(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, id):
+        self.id = id
         super().__init__(root, width=504, height=225)
         self.config(bg="#2b3e50")
+        self.db = Database()
         self.place(x=200,y=180) #115
         self.table = ttk.Treeview(self)
 
@@ -276,11 +458,14 @@ class TransactionView(tk.Frame):
         self.table.heading('Description', text='Description', anchor=tk.W)
 
         # Sample data
+        '''
         self.data = [
             ('07/07/2025', 'Income', 300.01, 'Shopping', 'groceries'),
             ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest'),
             ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest')
         ]
+        '''
+        self.data = self.db.getTransactions((self.id,))
 
         # Configure alternating row colors
         '''
@@ -290,7 +475,7 @@ class TransactionView(tk.Frame):
 
         # Configure alternating row colors
         self.table.tag_configure('Income', background="#29BB15")
-        self.table.tag_configure('Expanse', background="#FA0808")
+        self.table.tag_configure('Expense', background="#FA0808")
 
         # Add data with alternating row colors
         '''
@@ -354,7 +539,7 @@ class BudgetView(tk.Frame):
 
         # Configure alternating row colors
         self.table.tag_configure('Income', background="#29BB15")
-        self.table.tag_configure('Expanse', background="#FA0808")
+        self.table.tag_configure('Expense', background="#FA0808")
 
         # Add data with alternating row colors
         '''
@@ -367,7 +552,7 @@ class BudgetView(tk.Frame):
 
         # Add data with alternating row colors
         for i in range(len(self.data)):
-            self.table.insert(parent='', index=i, values=self.data[i], tags=("Expanse",))
+            self.table.insert(parent='', index=i, values=self.data[i], tags=("Expense",))
             
         # Pack the table
         #self.table.pack(expand=True, fill=tk.BOTH)
@@ -408,8 +593,11 @@ class BudgetView(tk.Frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
 class MainBackground(tk.Frame):
-    def __init__(self, root):
-
+    def __init__(self, root, id):
+        self.db = Database()
+        self.id = id
+        self.balanceAmount = self.db.getUserBalance((self.id,))[0][0]
+        self.moneyPng = ImageTk.PhotoImage(Image.open('money.png'))
         # Setting up the main frame
         self.root = root
         super().__init__(self.root, width=1066, height=768)
@@ -423,13 +611,23 @@ class MainBackground(tk.Frame):
         self.background = tk.Frame(self, width=1066, height=768)
         self.background.config(bg="#2b3e50")
         self.background.place(x=0,y=0)
-        
+
+        #Placing the label with the balance amount
+        self.balance = tk.Frame(self.background, width=200, height=50)
+        self.balance.config(bg="#46919e")
+        self.balance.place(x=650,y=20)
+        self.labelMoney = tk.Label(self.balance, image=self.moneyPng, height=50 ,width=50 ,borderwidth=0)
+        self.labelMoney.config(bg="#46919e")
+        self.labelMoney.place(x=5, y=0)
+        self.balanceAmountLabel = ttk.Label(self.balance, text=self.balanceAmount, font=('Segoe UI', 20), background="#46919e")
+        self.balanceAmountLabel.place(x=50, y=0)
+
         # Placing the transaction option frame
-        self.transactionView = TransactionView(self)
+        self.transactionView = TransactionView(self, id)
         self.background.tkraise()
 
         # Allowing switch between transaction frames
-        self.transactionAdd = TransactionAdd(self)
+        self.transactionAdd = TransactionAdd(self, id)
         self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
         self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
 
@@ -447,6 +645,24 @@ class MainBackground(tk.Frame):
     def showBudget(self):
         self.background.tkraise()
         self.budgetView.tkraise()
+
+    def refresh(self):
+        # Placing the transaction option frame
+        self.transactionView = TransactionView(self, self.id)
+        self.background.tkraise()
+
+        # Allowing switch between transaction frames
+        self.transactionAdd = TransactionAdd(self, self.id)
+        self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
+        self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
+
+    def updateBalance(self, amount):
+        #Updating the balance
+        currentBalance = float(self.db.getUserBalance((self.id,))[0][0])
+        currentBalance = currentBalance + amount
+        print(currentBalance)
+        self.db.setUserBalance((currentBalance, self.id))
+        self.balanceAmountLabel['text'] = str(currentBalance)
 
 class Hello(tk.Frame):
     def __init__(self, root):
@@ -472,7 +688,7 @@ class Hello(tk.Frame):
         self.left_window.place(x=0,y=0)
 
         # Main interface:
-        self.mainBackground = MainBackground(self.root) 
+        self.mainBackground = MainBackground(self.root, id) 
 
         # Username label
         self.label = ttk.Label(self.left_window, text=id, font=('Segoe UI', 40), background="#46919e")
@@ -536,14 +752,30 @@ class Main(tk.Tk):
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 
 if __name__ == "__main__":
-    
     root = Main()
     root.mainloop() 
+
     #x = datetime.datetime.now()
     #print(root.width, root.height)  
-    '''
-    db = Database()
-    db.startOver()
-    '''
-    #print(db.isUserExist(('wildcat6','xxx')))
+
+    #db = Database()
+    #db.startOver()
+    #db.startOver()
+    #(description,amount,income,tdate,category,username)
+    #print(db.getCategories())
+    #db.insertCategory(("car","#1536f3"))
+    #db.insertTransaction(("friendo",50.0,"Income","2026-08-26","car","wild6"))
+    #db.insertUser(("wild6","xxx",1000.0))
+
+    #print([db.getCategories()[i][0] for i in range(len(db.getCategories()))])
+    #print([i*2 for i in range(2)])
+    #print(db.getTransactions(("jimx",)))
+    #print(db.getUsernames())
+    #print(db.getUserBalance(("jimx",))[0][0])
+    #db.setUserBalance((10020.0,"jimx"))
+    #print(db.getUserBalance(("jimx",))[0][0])
+    
+
+    
+    
 
