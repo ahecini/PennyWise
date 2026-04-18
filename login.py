@@ -224,14 +224,14 @@ class Login(tk.Frame):
         self.login_button.place(x=16,y=115.5) 
         self.signup_button = ttk.Button(self, text="Sign up", bootstyle="info", width=13)
         self.signup_button.place(x=170,y=115.5)
-    def setLoginButtonCommand(self, background):
-        self.login_button['command'] = lambda:self.login(self.hello, background)
+    def setLoginButtonCommand(self, mainframe):
+        self.login_button['command'] = lambda:self.login(mainframe)
     def setSignupButtonCommand(self, frame, background):
         self.signup_button['command'] = lambda:self.signup(frame, background)
-    def login(self, frame, background):
+    def login(self, frame):
         if self.db.isUserExist((self.text1.get(),self.text2.get())) :
             self.hello.setDashboard(self.text1.get())
-            self.hello.setBackButtonCommand(self, background)
+            self.hello.setBackButtonCommand(frame)
             #background.tkraise()
             #frame.tkraise()
         else:
@@ -364,6 +364,7 @@ class TransactionAdd(tk.Frame):
         self.addCategoryButton = tk.Button(self, image=self.add, height=15 ,width=15 ,borderwidth=0)
         self.addCategoryButton.config(bg="#4B41D7")
         self.addCategoryButton.place(x=85,y=188.5)
+        #self.addCategoryButton['command'] = lambda:self.printFormInfos()
         #self.AddCategoryButton.place(x=85,y=183.5) #115.5
 
         # Income/Expense area
@@ -592,6 +593,23 @@ class BudgetView(tk.Frame):
     def setAddTransactionButton(self, background, frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
+class CategoryAdd(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, width=504, height=225)
+        self.config(bg="#d41919")
+        self.place(x=200,y=180) #115
+
+        # Approve button 
+        self.approveButton = ttk.Button(self, text="Approve", bootstyle="success", width=20)
+        self.approveButton.place(x=25,y=140.5) #115.5
+        self.approveButton.config(state=tk.DISABLED)
+
+    def changeFrame(self, background, frame):
+        background.tkraise()
+        frame.tkraise()
+    def setAddTransactionButton(self, background, frame):
+        self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
@@ -606,6 +624,9 @@ class MainBackground(tk.Frame):
 
         # Placing the budget option frame
         self.budgetView = BudgetView(self)
+
+        # Placing the add category frame
+        self.categoryAdd = CategoryAdd(self)
 
         # Placing the background
         self.background = tk.Frame(self, width=1066, height=768)
@@ -646,6 +667,12 @@ class MainBackground(tk.Frame):
         self.background.tkraise()
         self.budgetView.tkraise()
 
+    
+    def showCategoryAdd(self):
+        self.background.tkraise()
+        self.categoryAdd.tkraise()
+    
+
     def refresh(self):
         # Placing the transaction option frame
         self.transactionView = TransactionView(self, self.id)
@@ -668,11 +695,12 @@ class Hello(tk.Frame):
     def __init__(self, root):
         super().__init__(root,width=300, height=150)
         self.root = root
-    def setBackButtonCommand(self, frame, background):
-        self.button['command'] = lambda:self.raise_frame(frame, background)
-    def raise_frame(self, frame, background):
-        background.tkraise()
-        frame.tkraise()
+    def setBackButtonCommand(self, frame):
+        self.button['command'] = lambda:self.raise_frame(frame)
+    def raise_frame(self, frame):
+        newFrame = Main(frame.root)
+        newFrame.place(x=0, y=0)
+        newFrame.tkraise()
     def setDashboard(self, id):
 
         # Importing the profile and exit icons
@@ -724,16 +752,14 @@ class Hello(tk.Frame):
         self.buttonViewReport.place(x=50,y=270)
         """       
 
-class Main(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.style = ttk.Style(theme='superhero')
-        self.title('Login App')
-        self.width= self.winfo_screenwidth() 
-        self.height= self.winfo_screenheight()
-        self.geometry("%dx%d" % (self.width-200, self.height-200))
+class Main(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, height = root.winfo_screenheight()-200, width = root.winfo_screenwidth()-200)
+        #self.mainframe.place(x=0,y=0)
+        #self.mainframe.tkraise()
         #400x300
         #1366x768
+        self.root = root
         self.title = ttk.Label(self, font=('Segoe UI',25), text="PennyWise")
         self.title.place(x=500,y=2)
         self.subtitle = ttk.Label(self, font=('Segoe UI',15), text="Know where your money at")
@@ -745,14 +771,26 @@ class Main(tk.Tk):
         self.frame_background.place(x=438,y=234) #115
         self.frame_background.tkraise()
         self.frame1 = Login(self)
-        self.frame1.setLoginButtonCommand(self.frame_background)
+        self.frame1.setLoginButtonCommand(self)
         #self.frame2.setBackButtonCommand(self.frame1,self.frame_background)
         self.frame3.setSignupButtonCommand(self.frame1,self.frame_background)
         self.frame3.setLoginButtonCommand(self.frame1,self.frame_background)
         self.frame1.setSignupButtonCommand(self.frame3,self.frame_background)
 
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.style = ttk.Style(theme='superhero')
+        self.title('Login App')
+        self.width = self.winfo_screenwidth() 
+        self.height = self.winfo_screenheight()
+        self.geometry("%dx%d" % (self.width-200, self.height-200))
+        self.mainframe = Main(self)
+        self.mainframe.place(x=0, y=0)
+        self.mainframe.tkraise()
+
 if __name__ == "__main__":
-    root = Main()
+    root = App()
     root.mainloop() 
 
     #x = datetime.datetime.now()
