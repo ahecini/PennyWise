@@ -4,6 +4,7 @@ from tkinter import messagebox
 import sqlite3
 from PIL import Image, ImageTk
 import datetime
+from random import randrange
 
 class Database:
 
@@ -364,7 +365,7 @@ class TransactionAdd(tk.Frame):
         self.addCategoryButton = tk.Button(self, image=self.add, height=15 ,width=15 ,borderwidth=0)
         self.addCategoryButton.config(bg="#4B41D7")
         self.addCategoryButton.place(x=85,y=188.5)
-        self.addCategoryButton['command'] = lambda:self.printFormInfos()
+        #self.addCategoryButton['command'] = lambda:self.printFormInfos()
         #self.AddCategoryButton.place(x=85,y=183.5) #115.5
 
         # Income/Expense area
@@ -600,24 +601,29 @@ class BudgetView(tk.Frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
 class CategoryAdd(tk.Frame):
-    def __init__(self, root):
-        super().__init__(root, width=300, height=160)
+    def __init__(self, root, id):
+        self.root = root
+        super().__init__(self.root, width=300, height=160)
         self.config(bg="#4B41D7")
         self.place(x=300,y=180) #115
+
+        self.db = Database()
+        self.id = id
 
         # Category area
         self.categoryLabel = ttk.Label(self, text="New category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=25,y=15.5) 
-        self.categoryLabel = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
-        self.categoryLabel.place(x=25,y=45.5)
+        self.categoryText = ttk.Entry(self, font=('Helvetica',8), width=40, bootstyle="info")
+        self.categoryText.place(x=25,y=45.5)
 
         # Approve button 
         self.approveButton = ttk.Button(self, text="Approve", bootstyle="success", width=15)
         self.approveButton.place(x=25,y=95.5) #115.5
-        self.approveButton.config(state=tk.DISABLED)
+        self.approveButton['command'] = lambda:self.approveCategory()
+        #self.approveButton.config(state=tk.DISABLED)
 
         # Cancel button 
-        self.cancelButton = ttk.Button(self, text="Cancel", bootstyle="success", width=15)
+        self.cancelButton = ttk.Button(self, text="Cancel", bootstyle="info", width=15)
         self.cancelButton.place(x=165,y=95.5) #115.5
 
     def changeFrame(self, background, frame):
@@ -625,7 +631,15 @@ class CategoryAdd(tk.Frame):
         frame.tkraise()
     def setCancelButton(self, background, frame):
         self.cancelButton['command'] = lambda:self.changeFrame(background, frame)
-
+    def approveCategory(self):
+        description = self.categoryText.get()
+        colorHex = hex(randrange(0,2**24))
+        color = "#"+colorHex[2:]
+        if(len(description.replace(" ",""))==0):
+            messagebox.showinfo("Failure", "Please insert a valid description!")
+        else:
+            self.db.insertCategory((description, color))
+            self.root.refresh()
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
@@ -642,7 +656,7 @@ class MainBackground(tk.Frame):
         self.budgetView = BudgetView(self)
 
         # Placing the add category frame
-        self.categoryAdd = CategoryAdd(self)
+        self.categoryAdd = CategoryAdd(self, self.id)
 
         # Placing the background
         self.background = tk.Frame(self, width=1066, height=768)
@@ -660,7 +674,7 @@ class MainBackground(tk.Frame):
         self.balanceAmountLabel.place(x=50, y=0)
 
         # Placing the add category frame
-        self.categoryAdd = CategoryAdd(self)
+        self.categoryAdd = CategoryAdd(self, self.id)
         self.categoryAdd.tkraise()
 
         # Placing the transaction option frame
@@ -672,6 +686,7 @@ class MainBackground(tk.Frame):
         self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
         self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
         self.transactionAdd.setAddCategoryButton(self.background, self.categoryAdd)
+        self.categoryAdd.setCancelButton(self.background, self.transactionAdd)
 
         # Starting screen
         self.background.tkraise()
@@ -703,6 +718,8 @@ class MainBackground(tk.Frame):
         self.transactionAdd = TransactionAdd(self, self.id)
         self.transactionAdd.setViewTransactionButton(self.background, self.transactionView)
         self.transactionView.setAddTransactionButton(self.background, self.transactionAdd)
+        self.transactionAdd.setAddCategoryButton(self.background, self.categoryAdd)
+        self.categoryAdd.setCancelButton(self.background, self.transactionAdd)
 
     def updateBalance(self, amount):
         #Updating the balance
