@@ -638,8 +638,11 @@ class CategoryAdd(tk.Frame):
         if(len(description.replace(" ",""))==0):
             messagebox.showinfo("Failure", "Please insert a valid description!")
         else:
-            self.db.insertCategory((description, color))
-            self.root.refresh()
+            try:
+                self.db.insertCategory((description, color))
+                self.root.refresh()
+            except:
+                messagebox.showinfo("Failure", "Please insert a non-existant description!")
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
