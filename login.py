@@ -30,7 +30,8 @@ class Database:
                     );
                     create table `category`(
                         name varchar(50) PRIMARY KEY,
-                        colour varcher(7)
+                        colour varcher(7),
+                        user_id integer 
                     );
                     create table `transaction`(
                         trans_id integer PRIMARY KEY,
@@ -54,8 +55,8 @@ class Database:
                     """)
         
         # Commit the changes made to the database
-        self.insertCategory(("car","#1536f3"))
-        self.insertCategory(("shopping","#27f315"))
+        self.insertCategory(("car","#1536f3",0))
+        self.insertCategory(("shopping","#27f315",0))
         self.conn.commit()
 
     """
@@ -147,7 +148,7 @@ class Database:
     def insertCategory(self, data):
 
         # Execute the script that inserts a category
-        self.cursor.execute("insert into category values (?,?)", data)
+        self.cursor.execute("insert into category values (?,?,?)", data)
 
         # Commit the changes made to the database
         self.conn.commit()
@@ -174,6 +175,18 @@ class Database:
 
         # Execute the script to select all category names
         self.cursor.execute("select name from category")
+
+        # Returns a list of strings
+        return self.cursor.fetchall()   
+
+    """
+    Method : gets all category names from the `category` table associated with a user.
+    Returns : string[].
+    """  
+    def getCategoriesId(self, id):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select name from category where `user_id` in (0,?) ", (id,))
 
         # Returns a list of strings
         return self.cursor.fetchall()   
@@ -354,7 +367,7 @@ class TransactionAdd(tk.Frame):
         self.categoryLabel = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=16,y=183.5)
         #self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
-        self.category_Options = [self.db.getCategories()[i][0] for i in range(len(self.db.getCategories()))]
+        self.category_Options = [self.db.getCategoriesId(self.id)[i][0] for i in range(len(self.db.getCategoriesId(self.id)))]
         self.category_Options.insert(0,self.category_Options[0])
         self.category_ValueInside = tk.StringVar(self)
         self.category_ValueInside.set("Expense")
@@ -639,7 +652,7 @@ class CategoryAdd(tk.Frame):
             messagebox.showinfo("Failure", "Please insert a valid description!")
         else:
             try:
-                self.db.insertCategory((description, color))
+                self.db.insertCategory((description, color, self.id))
                 self.root.refresh()
             except:
                 messagebox.showinfo("Failure", "Please insert a non-existant description!")
