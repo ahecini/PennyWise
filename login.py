@@ -186,7 +186,7 @@ class Database:
     def getCategoriesId(self, id):
 
         # Execute the script to select all category names
-        self.cursor.execute("select name from category where `user_id` in (0,?) ", (id,))
+        self.cursor.execute("select name from category where `user_id`=? ", (id,))
 
         # Returns a list of strings
         return self.cursor.fetchall()   
@@ -368,9 +368,9 @@ class TransactionAdd(tk.Frame):
         self.categoryLabel.place(x=16,y=183.5)
         #self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
         self.category_Options = [self.db.getCategoriesId(self.id)[i][0] for i in range(len(self.db.getCategoriesId(self.id)))]
-        self.category_Options.insert(0,self.category_Options[0])
+        self.category_Options.insert(0,"")
         self.category_ValueInside = tk.StringVar(self)
-        self.category_ValueInside.set("Expense")
+        self.category_ValueInside.set("")
         self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options, bootstyle="dark")
         self.category_QuestionMenu.place(x=16,y=215.5)
         self.AddCategoryButton = ttk.Button(self, text="+", bootstyle="success", width=1)
@@ -384,7 +384,7 @@ class TransactionAdd(tk.Frame):
         # Income/Expense area
         self.incomeExpenselabel = ttk.Label(self, text="Income/Expense", font=('Segoe UI', 12), background="#4B41D7")
         self.incomeExpenselabel.place(x=150,y=183.5)
-        self.incomeExpense_Options = ["Income", "Expense", "Income"]
+        self.incomeExpense_Options = ["", "Expense", "Income"]
         self.incomeExpense_ValueInside = tk.StringVar(self)
         self.incomeExpense_ValueInside.set("Expense")
         self.incomeExpense_QuestionMenu = ttk.OptionMenu(self, self.incomeExpense_ValueInside, *self.incomeExpense_Options, bootstyle="dark")
@@ -436,6 +436,7 @@ class TransactionAdd(tk.Frame):
         date2 = day=="30" and month=="2"
         date3 = day=="29" and month=="2" and int(year)%4!=0
         dateIsValid = not date1 and not date2 and not date3
+        categoryIsValid = category.replace(" ", "")!=""
 
         if(not amountIsValid):
             messagebox.showinfo("Failure", "Please insert a valid amount!")
@@ -443,6 +444,8 @@ class TransactionAdd(tk.Frame):
             messagebox.showinfo("Failure", "Please insert a valid description!")
         elif(not dateIsValid):
             messagebox.showinfo("Failure", "Please insert a valid date!")
+        elif(not categoryIsValid):
+            messagebox.showinfo("Failure", "Please choose or create a category!")
         else:
             messagebox.showinfo("Success", "Transaction added successfully!")
             self.db.insertTransaction((description,amount,ttype,date,category,self.id))
