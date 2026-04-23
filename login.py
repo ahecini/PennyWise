@@ -31,7 +31,8 @@ class Database:
                     create table `category`(
                         name varchar(50) PRIMARY KEY,
                         colour varcher(7),
-                        user_id integer 
+                        username varchar(50),
+                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
                     );
                     create table `transaction`(
                         trans_id integer PRIMARY KEY,
@@ -46,17 +47,22 @@ class Database:
                     );
                     create table `budget`(
                         budget_id integer primary key,
+                        category varchar(50),         
                         amount float,
-                        category varchar(50),
-                        username varchar(50),
-                        FOREIGN KEY (`category`) REFERENCES `category`(`name`),
-                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
+                        FOREIGN KEY (`category`) REFERENCES `category`(`name`)
                     );
                     """)
         
         # Commit the changes made to the database
-        self.insertCategory(("car","#1536f3",0))
-        self.insertCategory(("shopping","#27f315",0))
+        self.insertUser(("user", "xxx", 100.0))
+        self.insertUser(("wild6", "xxx", 100.0))
+        self.insertCategory(("car","#1536f3","user"))
+        self.insertCategory(("shopping","#27f315","wild6"))
+        self.insertCategory(("blood","#f31515","wild6"))
+        self.insertBudget(("car", 100.0))
+        self.insertBudget(("shopping", 150.0))
+        #self.insertBudget(("blood", 150.0))
+        print(self.getBudget("user"))
         self.conn.commit()
 
     """
@@ -186,7 +192,7 @@ class Database:
     def getCategoriesId(self, id):
 
         # Execute the script to select all category names
-        self.cursor.execute("select name from category where `user_id`=? ", (id,))
+        self.cursor.execute("select name from category where `username`=? ", (id,))
 
         # Returns a list of strings
         return self.cursor.fetchall()   
@@ -217,7 +223,35 @@ class Database:
         self.cursor.execute("select tdate,ttype,amount,category,description from `transaction` where `username`=?", username)
 
         # Returns a list of strings
-        return self.cursor.fetchall()   
+        return self.cursor.fetchall()  
+     
+    """
+    Method : inserts a budget in the `budget` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the budget to insert.
+    Returns : void.
+    """
+    def insertBudget(self, data):     
+
+        # Execute the script that inserts a budget
+        self.cursor.execute("insert into `budget`(category,amount) values (?,?)", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
+
+    """
+    Method : gets all budget amounts corresponding to a user from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudget(self, username):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select category,amount from `budget` inner join `category` on `budget`.`category`=`category`.`name` where `username`=?", (username,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
 
 class Login(tk.Frame):
     def __init__(self, root):
@@ -529,11 +563,16 @@ class TransactionView(tk.Frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
 class BudgetView(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, id):
         super().__init__(root, width=504, height=225)
         self.config(bg="#2b3e50")
         self.place(x=200,y=180) #115
-        self.table = ttk.Treeview(self)
+        self.table = ttk.Treeview(self, selectmode="browse")
+        self.table.bind('<ButtonRelease-1>', self.selectItem)
+        self.table.bind('<ButtonRelease-3>', self.deselectItem)
+
+        self.db = Database()
+        self.id = id
 
         # Define the columns
         self.table['columns'] = ('Category', 'Budget')
@@ -549,12 +588,17 @@ class BudgetView(tk.Frame):
         self.table.heading('Budget', text='Budget', anchor=tk.W)
 
         # Sample data
-        self.data = [
-            ('Shopping', 300.01),
-            ('Car', 10.01),
-            ('Groceries', 10.01)
-        ]
-
+        self.data = self.db.getBudget(self.id)
+        print(self.data)
+        self.cleanData = []
+        for data in self.data :
+            dataList = list(data)
+            if dataList[1]==-1:
+                dataList[1]="no budget"
+            else:
+                dataList[1]=data[1]
+            self.cleanData.append(tuple(dataList))
+        print(self.cleanData)
         # Configure alternating row colors
         '''
         self.table.tag_configure('oddrow', background="#5F07EC")
@@ -575,16 +619,17 @@ class BudgetView(tk.Frame):
         '''
 
         # Add data with alternating row colors
-        for i in range(len(self.data)):
-            self.table.insert(parent='', index=i, values=self.data[i], tags=("Expense",))
+        for i in range(len(self.cleanData)):
+            self.table.insert(parent='', index=i, values=self.cleanData[i], tags=("Expense",))
             
         # Pack the table
         #self.table.pack(expand=True, fill=tk.BOTH)
         self.table.place(x=0,y=0)
 
         # Go to add transaction interface
-        self.AddTransactionButton = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
-        self.AddTransactionButton.place(x=0,y=187.5) #115.5
+        self.ModifiyBudget = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
+        self.ModifiyBudget.place(x=0,y=187.5) #115.5
+        self.ModifiyBudget.config(state=tk.DISABLED)
 
         # Frame carrying the form to modify the budget
         # The main Frame
@@ -610,11 +655,19 @@ class BudgetView(tk.Frame):
         self.approveButton.place(x=25,y=140.5) #115.5
         self.approveButton.config(state=tk.DISABLED)
 
+    def selectItem(self, a):
+        curItem = self.table.focus()
+        print(self.table.item(curItem)["values"])
+        self.ModifiyBudget.config(state=tk.NORMAL)
+
+    def deselectItem(self, a):
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+    
     def changeFrame(self, background, frame):
         background.tkraise()
         frame.tkraise()
-    def setAddTransactionButton(self, background, frame):
-        self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
 class CategoryAdd(tk.Frame):
     def __init__(self, root, id):
@@ -656,9 +709,12 @@ class CategoryAdd(tk.Frame):
         else:
             try:
                 self.db.insertCategory((description, color, self.id))
+                self.db.insertBudget((description, -1))
+                print(self.id)
                 self.root.refresh()
             except:
                 messagebox.showinfo("Failure", "Please insert a non-existant description!")
+
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
@@ -672,7 +728,7 @@ class MainBackground(tk.Frame):
         self.place(x=300,y=0)
 
         # Placing the budget option frame
-        self.budgetView = BudgetView(self)
+        self.budgetView = BudgetView(self, self.id)
 
         # Placing the add category frame
         self.categoryAdd = CategoryAdd(self, self.id)
@@ -729,6 +785,11 @@ class MainBackground(tk.Frame):
     
 
     def refresh(self):
+
+        # Placing the budget frame
+        self.budgetView = BudgetView(self, self.id)
+        self.background.tkraise()
+        
         # Placing the transaction option frame
         self.transactionView = TransactionView(self, self.id)
         self.background.tkraise()
