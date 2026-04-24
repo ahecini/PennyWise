@@ -30,7 +30,9 @@ class Database:
                     );
                     create table `category`(
                         name varchar(50) PRIMARY KEY,
-                        colour varcher(7)
+                        colour varcher(7),
+                        username varchar(50),
+                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
                     );
                     create table `transaction`(
                         trans_id integer PRIMARY KEY,
@@ -45,17 +47,22 @@ class Database:
                     );
                     create table `budget`(
                         budget_id integer primary key,
+                        category varchar(50),         
                         amount float,
-                        category varchar(50),
-                        username varchar(50),
-                        FOREIGN KEY (`category`) REFERENCES `category`(`name`),
-                        FOREIGN KEY (`username`) REFERENCES `user`(`username`)
+                        FOREIGN KEY (`category`) REFERENCES `category`(`name`)
                     );
                     """)
         
         # Commit the changes made to the database
-        self.insertCategory(("car","#1536f3"))
-        self.insertCategory(("shopping","#27f315"))
+        self.insertUser(("user", "xxx", 100.0))
+        self.insertUser(("wild6", "xxx", 100.0))
+        self.insertCategory(("car","#1536f3","user"))
+        self.insertCategory(("shopping","#27f315","wild6"))
+        self.insertCategory(("blood","#f31515","wild6"))
+        self.insertBudget(("car", 100.0))
+        self.insertBudget(("shopping", 150.0))
+        #self.insertBudget(("blood", 150.0))
+        print(self.getBudget("user"))
         self.conn.commit()
 
     """
@@ -147,7 +154,7 @@ class Database:
     def insertCategory(self, data):
 
         # Execute the script that inserts a category
-        self.cursor.execute("insert into category values (?,?)", data)
+        self.cursor.execute("insert into category values (?,?,?)", data)
 
         # Commit the changes made to the database
         self.conn.commit()
@@ -179,6 +186,18 @@ class Database:
         return self.cursor.fetchall()   
 
     """
+    Method : gets all category names from the `category` table associated with a user.
+    Returns : string[].
+    """  
+    def getCategoriesId(self, id):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select name from category where `username`=? ", (id,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()   
+
+    """
     Method : inserts a transaction in the `transaction` table.
     Parameters :
     - data(tuple): data corresponding to the informations of the transaction to insert.
@@ -204,8 +223,88 @@ class Database:
         self.cursor.execute("select tdate,ttype,amount,category,description from `transaction` where `username`=?", username)
 
         # Returns a list of strings
-        return self.cursor.fetchall()   
+        return self.cursor.fetchall()  
+     
+    """
+    Method : inserts a budget in the `budget` table.
+    Parameters :
+    - data(tuple): data corresponding to the informations of the budget to insert.
+    Returns : void.
+    """
+    def insertBudget(self, data):     
 
+        # Execute the script that inserts a budget
+        self.cursor.execute("insert into `budget`(category,amount) values (?,?)", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
+
+    """
+    Method : gets all budget amounts corresponding to a user from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudget(self, username):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select category,amount from `budget` inner join `category` on `budget`.`category`=`category`.`name` where `username`=?", (username,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+
+    """
+    Method : gets all budget amounts corresponding to a user from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudget(self, username):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select category,amount from `budget` inner join `category` on `budget`.`category`=`category`.`name` where `username`=?", (username,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+
+    """
+    Method : gets the total amount of expenses of a given category.
+    Returns : float[].
+    """  
+    def getCategoryExpenses(self, category):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select sum(amount) from `transaction` where `category`=? and `ttype`='Expense'", (category,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+    
+    """
+    Method : updates a budget amount in the `budget` table.
+    Parameters :
+    - data(tuple): data corresponding to the amount of the budget to update to.
+    Returns : void.
+    """
+    def updateBudgetAmount(self, data):     
+
+        # Execute the script that inserts a budget
+        self.cursor.execute("update `budget` set amount=? where `category`=?", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
+
+    """
+    Method : gets the budget amount corresponding to a category from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudgetAmount(self, category):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select amount from `budget` where `category`=?", (category,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+    
 class Login(tk.Frame):
     def __init__(self, root):
         self.hello = Hello(root) 
@@ -354,10 +453,10 @@ class TransactionAdd(tk.Frame):
         self.categoryLabel = ttk.Label(self, text="Category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=16,y=183.5)
         #self.category_Options = ["Groceries", "Car", "Groceries", "Phone"]
-        self.category_Options = [self.db.getCategories()[i][0] for i in range(len(self.db.getCategories()))]
-        self.category_Options.insert(0,self.category_Options[0])
+        self.category_Options = [self.db.getCategoriesId(self.id)[i][0] for i in range(len(self.db.getCategoriesId(self.id)))]
+        self.category_Options.insert(0,"")
         self.category_ValueInside = tk.StringVar(self)
-        self.category_ValueInside.set("Expense")
+        self.category_ValueInside.set("")
         self.category_QuestionMenu = ttk.OptionMenu(self, self.category_ValueInside, *self.category_Options, bootstyle="dark")
         self.category_QuestionMenu.place(x=16,y=215.5)
         self.AddCategoryButton = ttk.Button(self, text="+", bootstyle="success", width=1)
@@ -371,7 +470,7 @@ class TransactionAdd(tk.Frame):
         # Income/Expense area
         self.incomeExpenselabel = ttk.Label(self, text="Income/Expense", font=('Segoe UI', 12), background="#4B41D7")
         self.incomeExpenselabel.place(x=150,y=183.5)
-        self.incomeExpense_Options = ["Income", "Expense", "Income"]
+        self.incomeExpense_Options = ["", "Expense", "Income"]
         self.incomeExpense_ValueInside = tk.StringVar(self)
         self.incomeExpense_ValueInside.set("Expense")
         self.incomeExpense_QuestionMenu = ttk.OptionMenu(self, self.incomeExpense_ValueInside, *self.incomeExpense_Options, bootstyle="dark")
@@ -423,6 +522,7 @@ class TransactionAdd(tk.Frame):
         date2 = day=="30" and month=="2"
         date3 = day=="29" and month=="2" and int(year)%4!=0
         dateIsValid = not date1 and not date2 and not date3
+        categoryIsValid = category.replace(" ", "")!=""
 
         if(not amountIsValid):
             messagebox.showinfo("Failure", "Please insert a valid amount!")
@@ -430,12 +530,18 @@ class TransactionAdd(tk.Frame):
             messagebox.showinfo("Failure", "Please insert a valid description!")
         elif(not dateIsValid):
             messagebox.showinfo("Failure", "Please insert a valid date!")
+        elif(not categoryIsValid):
+            messagebox.showinfo("Failure", "Please choose or create a category!")
         else:
             messagebox.showinfo("Success", "Transaction added successfully!")
             self.db.insertTransaction((description,amount,ttype,date,category,self.id))
             self.root.refresh()
             operationType = (-1)**int(bin(ttype=="Expense")[2:])
             self.root.updateBalance(operationType*amount)
+            expenses = self.db.getCategoryExpenses((category))[0][0]
+            budget = self.db.getBudgetAmount((category))[0][0]
+            if(expenses>=budget):
+                messagebox.showinfo("Warning!", "A budget was not respected. Please check the budget table")
 
 class TransactionView(tk.Frame):
     def __init__(self, root, id):
@@ -469,8 +575,8 @@ class TransactionView(tk.Frame):
         '''
         self.data = [
             ('07/07/2025', 'Income', 300.01, 'Shopping', 'groceries'),
-            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest'),
-            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest')
+            ('17/07/2025', 'expense', 10.01, 'Shopping', 'interest'),
+            ('17/07/2025', 'expense', 10.01, 'Shopping', 'interest')
         ]
         '''
         self.data = self.db.getTransactions((self.id,))
@@ -513,32 +619,46 @@ class TransactionView(tk.Frame):
         self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
 
 class BudgetView(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, id):
         super().__init__(root, width=504, height=225)
+        self.root = root
         self.config(bg="#2b3e50")
         self.place(x=200,y=180) #115
-        self.table = ttk.Treeview(self)
+        self.table = ttk.Treeview(self, selectmode="browse")
+        self.table.bind('<ButtonRelease-1>', self.selectItem)
+        self.table.bind('<ButtonRelease-3>', self.deselectItem)
+
+        self.db = Database()
+        self.id = id
 
         # Define the columns
-        self.table['columns'] = ('Category', 'Budget')
+        self.table['columns'] = ('Category', 'Budget', 'expenses')
 
         # Format the columns
         self.table.column('#0', width=0, stretch=tk.NO)
-        self.table.column('Category', anchor=tk.W, width=100)
-        self.table.column('Budget', anchor=tk.W, width=100)
+        self.table.column('Category', anchor=tk.W, width=75)
+        self.table.column('Budget', anchor=tk.W, width=75)
+        self.table.column('expenses', anchor=tk.W, width=75)
 
         # Create the headings
         self.table.heading('#0', text='', anchor=tk.W)
         self.table.heading('Category', text='Category', anchor=tk.W)
         self.table.heading('Budget', text='Budget', anchor=tk.W)
+        self.table.heading('expenses', text='expenses', anchor=tk.W)
 
         # Sample data
-        self.data = [
-            ('Shopping', 300.01),
-            ('Car', 10.01),
-            ('Groceries', 10.01)
-        ]
-
+        self.data = self.db.getBudget(self.id)
+        print(self.data)
+        self.cleanData = []
+        for data in self.data :
+            dataList = list(data)
+            if dataList[1]==-1:
+                dataList[1]="no budget"
+            else:
+                dataList[1]=data[1]
+            dataList.append(self.db.getCategoryExpenses(dataList[0])[0][0])
+            self.cleanData.append(tuple(dataList))
+        print(self.cleanData)
         # Configure alternating row colors
         '''
         self.table.tag_configure('oddrow', background="#5F07EC")
@@ -546,8 +666,8 @@ class BudgetView(tk.Frame):
         '''
 
         # Configure alternating row colors
-        self.table.tag_configure('Income', background="#29BB15")
-        self.table.tag_configure('Expense', background="#FA0808")
+        self.table.tag_configure('Respected', background="#29BB15")
+        self.table.tag_configure('Not-respected', background="#FA0808")
 
         # Add data with alternating row colors
         '''
@@ -557,48 +677,102 @@ class BudgetView(tk.Frame):
             else:
                 self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
         '''
-
+        print(type(self.cleanData[0][2]))
         # Add data with alternating row colors
-        for i in range(len(self.data)):
-            self.table.insert(parent='', index=i, values=self.data[i], tags=("Expense",))
+        for i in range(len(self.cleanData)):
+            self.table.insert(parent='', index=i, values=self.cleanData[i], 
+                              tags=("Respected" 
+                                    if self.cleanData[i][1]>float(self.cleanData[i][2] if self.cleanData[i][2] is not None else 0.0) 
+                                    else "Not-respected",))
             
         # Pack the table
         #self.table.pack(expand=True, fill=tk.BOTH)
         self.table.place(x=0,y=0)
 
         # Go to add transaction interface
-        self.AddTransactionButton = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
-        self.AddTransactionButton.place(x=0,y=187.5) #115.5
+        self.ModifiyBudget = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
+        self.ModifiyBudget.place(x=0,y=187.5) #115.5
+        self.ModifiyBudget.config(state=tk.DISABLED)
+        self.ModifiyBudget['command'] = self.modifyBudget
 
         # Frame carrying the form to modify the budget
         # The main Frame
         self.modifyInterface = tk.Frame(self, width=200, height=185)
         self.modifyInterface.config(bg="#4B41D7")
-        self.modifyInterface.place(x=250,y=0) #115
+        self.modifyInterface.place(x=275,y=0) #115
 
         # Category area
+        self.categoryTextValue = ttk.StringVar()
         self.categoryLabel = ttk.Label(self.modifyInterface, text="Category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=16,y=0.5) 
-        self.categoryText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
+        self.categoryText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info", textvariable=self.categoryTextValue)
         self.categoryText.place(x=16,y=30.5)
         self.categoryText.config(state=tk.DISABLED)
 
         # Budget area
-        self.budgetLabel = ttk.Label(self.modifyInterface, text="Budget", font=('Segoe UI', 12), background="#4B41D7")
+        self.budgetLabel = ttk.Label(self.modifyInterface, text="New budget", font=('Segoe UI', 12), background="#4B41D7")
         self.budgetLabel.place(x=16,y=60.5) 
         self.budgetText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
         self.budgetText.place(x=16,y=90.5)
 
         # Approve button 
-        self.approveButton = ttk.Button(self.modifyInterface, text="Approve", bootstyle="success", width=20)
-        self.approveButton.place(x=25,y=140.5) #115.5
+        self.approveButton = ttk.Button(self.modifyInterface, text="Approve", bootstyle="success", width=9)
+        self.approveButton.place(x=15,y=140.5) #115.5
         self.approveButton.config(state=tk.DISABLED)
+        self.approveButton['command'] = self.approveModification
 
+        # Approve button 
+        self.cancelButton = ttk.Button(self.modifyInterface, text="Cancel", bootstyle="info", width=7)
+        self.cancelButton.place(x=110,y=140.5) #115.5
+        self.cancelButton.config(state=tk.DISABLED)
+        self.cancelButton['command'] = self.cancelModification
+
+    def selectItem(self, a):
+        curItem = self.table.focus()
+        print(self.table.item(curItem)["values"])
+        print(self.db.getCategoryExpenses(self.table.item(curItem)["values"][0]))
+        self.ModifiyBudget.config(state=tk.NORMAL)
+
+    def deselectItem(self, a):
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+    
     def changeFrame(self, background, frame):
         background.tkraise()
         frame.tkraise()
-    def setAddTransactionButton(self, background, frame):
-        self.AddTransactionButton['command'] = lambda:self.changeFrame(background, frame)
+
+    def modifyBudget(self):
+        curItem = self.table.focus()
+        self.categoryTextValue.set(self.table.item(curItem)["values"][0])
+        self.approveButton.config(state=tk.NORMAL)
+        self.cancelButton.config(state=tk.NORMAL)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+        self.table["selectmode"]="none"
+        self.table.bind('<ButtonRelease-1>', lambda *args:None)
+        self.table.bind('<ButtonRelease-3>', lambda *args:None)
+
+    def cancelModification(self):
+        self.categoryTextValue.set("")
+        self.approveButton.config(state=tk.DISABLED)
+        self.cancelButton.config(state=tk.DISABLED)
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+        self.table["selectmode"]="browse"  
+        self.table.bind('<ButtonRelease-1>', self.selectItem)
+        self.table.bind('<ButtonRelease-3>', self.deselectItem)    
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+
+    def approveModification(self):
+        try:
+            amount = float(self.budgetText.get())
+            category = self.categoryText.get()
+            self.db.updateBudgetAmount((amount, category))
+            self.root.refreshBudget()
+        except:
+            messagebox.showinfo("Failure", "Please insert a valid amount!")
 
 class CategoryAdd(tk.Frame):
     def __init__(self, root, id):
@@ -638,8 +812,14 @@ class CategoryAdd(tk.Frame):
         if(len(description.replace(" ",""))==0):
             messagebox.showinfo("Failure", "Please insert a valid description!")
         else:
-            self.db.insertCategory((description, color))
-            self.root.refresh()
+            try:
+                self.db.insertCategory((description, color, self.id))
+                self.db.insertBudget((description, -1))
+                print(self.id)
+                self.root.refresh()
+            except:
+                messagebox.showinfo("Failure", "Please insert a non-existant description!")
+
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
@@ -653,7 +833,7 @@ class MainBackground(tk.Frame):
         self.place(x=300,y=0)
 
         # Placing the budget option frame
-        self.budgetView = BudgetView(self)
+        self.budgetView = BudgetView(self, self.id)
 
         # Placing the add category frame
         self.categoryAdd = CategoryAdd(self, self.id)
@@ -708,8 +888,18 @@ class MainBackground(tk.Frame):
         self.background.tkraise()
         self.categoryAdd.tkraise()
     
+    def refreshBudget(self):
+        # Placing the budget frame
+        self.budgetView = BudgetView(self, self.id)
+        self.background.tkraise()    
+        self.budgetView.tkraise()    
 
     def refresh(self):
+
+        # Placing the budget frame
+        self.budgetView = BudgetView(self, self.id)
+        self.background.tkraise()
+        
         # Placing the transaction option frame
         self.transactionView = TransactionView(self, self.id)
         self.background.tkraise()
