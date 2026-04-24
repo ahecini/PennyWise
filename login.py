@@ -254,6 +254,18 @@ class Database:
         return self.cursor.fetchall()
 
     """
+    Method : gets all budget amounts corresponding to a user from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudget(self, username):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select category,amount from `budget` inner join `category` on `budget`.`category`=`category`.`name` where `username`=?", (username,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+
+    """
     Method : gets the total amount of expenses of a given category.
     Returns : float[].
     """  
@@ -280,6 +292,19 @@ class Database:
         self.conn.commit()
 
         print(5)
+
+    """
+    Method : gets the budget amount corresponding to a category from the `budget` table.
+    Returns : string[].
+    """  
+    def getBudgetAmount(self, category):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select amount from `budget` where `category`=?", (category,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+    
 class Login(tk.Frame):
     def __init__(self, root):
         self.hello = Hello(root) 
@@ -513,6 +538,10 @@ class TransactionAdd(tk.Frame):
             self.root.refresh()
             operationType = (-1)**int(bin(ttype=="Expense")[2:])
             self.root.updateBalance(operationType*amount)
+            expenses = self.db.getCategoryExpenses((category))[0][0]
+            budget = self.db.getBudgetAmount((category))[0][0]
+            if(expenses>=budget):
+                messagebox.showinfo("Warning!", "A budget was not respected. Please check the budget table")
 
 class TransactionView(tk.Frame):
     def __init__(self, root, id):
