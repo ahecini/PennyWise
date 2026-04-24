@@ -253,6 +253,18 @@ class Database:
         # Returns a list of strings
         return self.cursor.fetchall()
 
+    """
+    Method : gets the total amount of expanses of a given category.
+    Returns : float[].
+    """  
+    def getCategoryExpanses(self, category):
+
+        # Execute the script to select all category names
+        self.cursor.execute("select sum(amount) from `transaction` where `category`=? and `ttype`='Expense'", (category,))
+
+        # Returns a list of strings
+        return self.cursor.fetchall()
+
 class Login(tk.Frame):
     def __init__(self, root):
         self.hello = Hello(root) 
@@ -658,6 +670,7 @@ class BudgetView(tk.Frame):
     def selectItem(self, a):
         curItem = self.table.focus()
         print(self.table.item(curItem)["values"])
+        print(self.db.getCategoryExpanses(self.table.item(curItem)["values"][0]))
         self.ModifiyBudget.config(state=tk.NORMAL)
 
     def deselectItem(self, a):
