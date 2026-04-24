@@ -254,17 +254,32 @@ class Database:
         return self.cursor.fetchall()
 
     """
-    Method : gets the total amount of expanses of a given category.
+    Method : gets the total amount of expenses of a given category.
     Returns : float[].
     """  
-    def getCategoryExpanses(self, category):
+    def getCategoryExpenses(self, category):
 
         # Execute the script to select all category names
         self.cursor.execute("select sum(amount) from `transaction` where `category`=? and `ttype`='Expense'", (category,))
 
         # Returns a list of strings
         return self.cursor.fetchall()
+    
+    """
+    Method : updates a budget amount in the `budget` table.
+    Parameters :
+    - data(tuple): data corresponding to the amount of the budget to update to.
+    Returns : void.
+    """
+    def updateBudgetAmount(self, data):     
 
+        # Execute the script that inserts a budget
+        self.cursor.execute("update `budget` set amount=? where `category`=?", data)
+
+        # Commit the changes made to the database
+        self.conn.commit()
+
+        print(5)
 class Login(tk.Frame):
     def __init__(self, root):
         self.hello = Hello(root) 
@@ -531,8 +546,8 @@ class TransactionView(tk.Frame):
         '''
         self.data = [
             ('07/07/2025', 'Income', 300.01, 'Shopping', 'groceries'),
-            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest'),
-            ('17/07/2025', 'Expanse', 10.01, 'Shopping', 'interest')
+            ('17/07/2025', 'expense', 10.01, 'Shopping', 'interest'),
+            ('17/07/2025', 'expense', 10.01, 'Shopping', 'interest')
         ]
         '''
         self.data = self.db.getTransactions((self.id,))
@@ -577,6 +592,7 @@ class TransactionView(tk.Frame):
 class BudgetView(tk.Frame):
     def __init__(self, root, id):
         super().__init__(root, width=504, height=225)
+        self.root = root
         self.config(bg="#2b3e50")
         self.place(x=200,y=180) #115
         self.table = ttk.Treeview(self, selectmode="browse")
@@ -587,17 +603,19 @@ class BudgetView(tk.Frame):
         self.id = id
 
         # Define the columns
-        self.table['columns'] = ('Category', 'Budget')
+        self.table['columns'] = ('Category', 'Budget', 'expenses')
 
         # Format the columns
         self.table.column('#0', width=0, stretch=tk.NO)
-        self.table.column('Category', anchor=tk.W, width=100)
-        self.table.column('Budget', anchor=tk.W, width=100)
+        self.table.column('Category', anchor=tk.W, width=75)
+        self.table.column('Budget', anchor=tk.W, width=75)
+        self.table.column('expenses', anchor=tk.W, width=75)
 
         # Create the headings
         self.table.heading('#0', text='', anchor=tk.W)
         self.table.heading('Category', text='Category', anchor=tk.W)
         self.table.heading('Budget', text='Budget', anchor=tk.W)
+        self.table.heading('expenses', text='expenses', anchor=tk.W)
 
         # Sample data
         self.data = self.db.getBudget(self.id)
@@ -609,6 +627,7 @@ class BudgetView(tk.Frame):
                 dataList[1]="no budget"
             else:
                 dataList[1]=data[1]
+            dataList.append(self.db.getCategoryExpenses(dataList[0])[0][0])
             self.cleanData.append(tuple(dataList))
         print(self.cleanData)
         # Configure alternating row colors
@@ -618,8 +637,8 @@ class BudgetView(tk.Frame):
         '''
 
         # Configure alternating row colors
-        self.table.tag_configure('Income', background="#29BB15")
-        self.table.tag_configure('Expense', background="#FA0808")
+        self.table.tag_configure('Respected', background="#29BB15")
+        self.table.tag_configure('Not-respected', background="#FA0808")
 
         # Add data with alternating row colors
         '''
@@ -629,10 +648,13 @@ class BudgetView(tk.Frame):
             else:
                 self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
         '''
-
+        print(type(self.cleanData[0][2]))
         # Add data with alternating row colors
         for i in range(len(self.cleanData)):
-            self.table.insert(parent='', index=i, values=self.cleanData[i], tags=("Expense",))
+            self.table.insert(parent='', index=i, values=self.cleanData[i], 
+                              tags=("Respected" 
+                                    if self.cleanData[i][1]>float(self.cleanData[i][2] if self.cleanData[i][2] is not None else 0.0) 
+                                    else "Not-respected",))
             
         # Pack the table
         #self.table.pack(expand=True, fill=tk.BOTH)
@@ -642,35 +664,44 @@ class BudgetView(tk.Frame):
         self.ModifiyBudget = ttk.Button(self, text="Modify/Fix budget", bootstyle="success", width=20)
         self.ModifiyBudget.place(x=0,y=187.5) #115.5
         self.ModifiyBudget.config(state=tk.DISABLED)
+        self.ModifiyBudget['command'] = self.modifyBudget
 
         # Frame carrying the form to modify the budget
         # The main Frame
         self.modifyInterface = tk.Frame(self, width=200, height=185)
         self.modifyInterface.config(bg="#4B41D7")
-        self.modifyInterface.place(x=250,y=0) #115
+        self.modifyInterface.place(x=275,y=0) #115
 
         # Category area
+        self.categoryTextValue = ttk.StringVar()
         self.categoryLabel = ttk.Label(self.modifyInterface, text="Category", font=('Segoe UI', 12), background="#4B41D7")
         self.categoryLabel.place(x=16,y=0.5) 
-        self.categoryText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
+        self.categoryText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info", textvariable=self.categoryTextValue)
         self.categoryText.place(x=16,y=30.5)
         self.categoryText.config(state=tk.DISABLED)
 
         # Budget area
-        self.budgetLabel = ttk.Label(self.modifyInterface, text="Budget", font=('Segoe UI', 12), background="#4B41D7")
+        self.budgetLabel = ttk.Label(self.modifyInterface, text="New budget", font=('Segoe UI', 12), background="#4B41D7")
         self.budgetLabel.place(x=16,y=60.5) 
         self.budgetText = ttk.Entry(self.modifyInterface, font=('Helvetica',8), width=25, bootstyle="info")
         self.budgetText.place(x=16,y=90.5)
 
         # Approve button 
-        self.approveButton = ttk.Button(self.modifyInterface, text="Approve", bootstyle="success", width=20)
-        self.approveButton.place(x=25,y=140.5) #115.5
+        self.approveButton = ttk.Button(self.modifyInterface, text="Approve", bootstyle="success", width=9)
+        self.approveButton.place(x=15,y=140.5) #115.5
         self.approveButton.config(state=tk.DISABLED)
+        self.approveButton['command'] = self.approveModification
+
+        # Approve button 
+        self.cancelButton = ttk.Button(self.modifyInterface, text="Cancel", bootstyle="info", width=7)
+        self.cancelButton.place(x=110,y=140.5) #115.5
+        self.cancelButton.config(state=tk.DISABLED)
+        self.cancelButton['command'] = self.cancelModification
 
     def selectItem(self, a):
         curItem = self.table.focus()
         print(self.table.item(curItem)["values"])
-        print(self.db.getCategoryExpanses(self.table.item(curItem)["values"][0]))
+        print(self.db.getCategoryExpenses(self.table.item(curItem)["values"][0]))
         self.ModifiyBudget.config(state=tk.NORMAL)
 
     def deselectItem(self, a):
@@ -681,6 +712,38 @@ class BudgetView(tk.Frame):
     def changeFrame(self, background, frame):
         background.tkraise()
         frame.tkraise()
+
+    def modifyBudget(self):
+        curItem = self.table.focus()
+        self.categoryTextValue.set(self.table.item(curItem)["values"][0])
+        self.approveButton.config(state=tk.NORMAL)
+        self.cancelButton.config(state=tk.NORMAL)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+        self.table["selectmode"]="none"
+        self.table.bind('<ButtonRelease-1>', lambda *args:None)
+        self.table.bind('<ButtonRelease-3>', lambda *args:None)
+
+    def cancelModification(self):
+        self.categoryTextValue.set("")
+        self.approveButton.config(state=tk.DISABLED)
+        self.cancelButton.config(state=tk.DISABLED)
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+        self.ModifiyBudget.config(state=tk.DISABLED)
+        self.table["selectmode"]="browse"  
+        self.table.bind('<ButtonRelease-1>', self.selectItem)
+        self.table.bind('<ButtonRelease-3>', self.deselectItem)    
+        curItem = self.table.focus()
+        self.table.selection_remove(curItem)
+
+    def approveModification(self):
+        try:
+            amount = float(self.budgetText.get())
+            category = self.categoryText.get()
+            self.db.updateBudgetAmount((amount, category))
+            self.root.refreshBudget()
+        except:
+            messagebox.showinfo("Failure", "Please insert a valid amount!")
 
 class CategoryAdd(tk.Frame):
     def __init__(self, root, id):
@@ -796,6 +859,11 @@ class MainBackground(tk.Frame):
         self.background.tkraise()
         self.categoryAdd.tkraise()
     
+    def refreshBudget(self):
+        # Placing the budget frame
+        self.budgetView = BudgetView(self, self.id)
+        self.background.tkraise()    
+        self.budgetView.tkraise()    
 
     def refresh(self):
 
