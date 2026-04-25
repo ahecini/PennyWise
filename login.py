@@ -820,6 +820,25 @@ class CategoryAdd(tk.Frame):
             except:
                 messagebox.showinfo("Failure", "Please insert a non-existant description!")
 
+class ReportView(tk.Frame):
+    def __init__(self, root, id):
+        super().__init__(root, width=700, height=380)
+        self.root = root
+        self.config(bg="#4B41D7")
+        self.place(x=110,y=120) #115
+
+        # AddTransaction button
+        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
+        self.ChangeMonthBackButton.place(x=166,y=330) #115.5
+
+        # Category area
+        self.monthLabel = ttk.Label(self, text="April 2026", font=('Segoe UI', 15), background="#4B41D7")
+        self.monthLabel.place(x=306,y=325) 
+
+        # AddTransaction button
+        self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
+        self.ChangeMonthForwardButton.place(x=420,y=330) #115.5
+
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
@@ -831,6 +850,9 @@ class MainBackground(tk.Frame):
         super().__init__(self.root, width=1066, height=768)
         self.config(bg="#2b3e50")
         self.place(x=300,y=0)
+
+        # Placing the report option frame
+        self.reportView = ReportView(self, self.id)
 
         # Placing the budget option frame
         self.budgetView = BudgetView(self, self.id)
@@ -883,7 +905,10 @@ class MainBackground(tk.Frame):
         self.background.tkraise()
         self.budgetView.tkraise()
 
-    
+    def showReport(self):
+        self.background.tkraise()
+        self.reportView.tkraise()
+
     def showCategoryAdd(self):
         self.background.tkraise()
         self.categoryAdd.tkraise()
@@ -895,6 +920,10 @@ class MainBackground(tk.Frame):
         self.budgetView.tkraise()    
 
     def refresh(self):
+
+        # Placing the report frame
+        self.reportView = ReportView(self, self.id)
+        self.background.tkraise()
 
         # Placing the budget frame
         self.budgetView = BudgetView(self, self.id)
@@ -973,6 +1002,7 @@ class Hello(tk.Frame):
 
         #Report button
         self.buttonReport = ttk.Button(self.left_window, text="Report", bootstyle="info", width=30)
+        self.buttonReport['command'] = lambda:self.mainBackground.showReport()
         self.buttonReport.place(x=50,y=220)
 
         """
