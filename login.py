@@ -4,7 +4,11 @@ from tkinter import messagebox
 import sqlite3
 from PIL import Image, ImageTk
 import datetime
-from random import randrange
+from random import randrange, randint
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.animation import FuncAnimation
+from matplotlib import style
 
 class Database:
 
@@ -822,22 +826,61 @@ class CategoryAdd(tk.Frame):
 
 class ReportView(tk.Frame):
     def __init__(self, root, id):
-        super().__init__(root, width=700, height=380)
+        super().__init__(root, width=830, height=380)
         self.root = root
         self.config(bg="#4B41D7")
-        self.place(x=110,y=120) #115
+        self.place(x=20,y=120) #115
 
         # AddTransaction button
         self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
-        self.ChangeMonthBackButton.place(x=166,y=330) #115.5
+        self.ChangeMonthBackButton.place(x=246,y=330) #115.5
 
         # Category area
         self.monthLabel = ttk.Label(self, text="April 2026", font=('Segoe UI', 15), background="#4B41D7")
-        self.monthLabel.place(x=306,y=325) 
+        self.monthLabel.place(x=386,y=325) 
 
         # AddTransaction button
         self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
-        self.ChangeMonthForwardButton.place(x=420,y=330) #115.5
+        self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
+
+        self.chartFrame = tk.Frame(self, width=300, height=220)
+        self.chartFrame.config(bg="#D74B41")
+        self.chartFrame.place(x=10,y=10) #115
+
+        y = [i*randint(1,300) for i in range(32)]
+
+        style.use("_mpl-gallery")
+        fig = Figure(figsize=(4, 3), dpi=100)
+        ax1 = fig.add_subplot(1, 1, 1)
+        ax1.set_xlabel('Day')
+        ax1.set_ylabel('Amount', color='g')
+        fig.tight_layout()
+
+        ax1.plot(y)
+
+        graph = FigureCanvasTkAgg(fig, master=self.chartFrame)
+        canvas = graph.get_tk_widget()
+        canvas.grid(row=0, column=0)
+
+        self.pieChartFrame = tk.Frame(self, width=300, height=220)
+        self.pieChartFrame.config(bg="#D74B41")
+        self.pieChartFrame.place(x=430,y=10) #115
+
+        labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
+        sizes = [15, 30, 45, 10]
+
+        style.use("_mpl-gallery")
+        fig2 = Figure(figsize=(3.8, 3), dpi=100)
+        ax2 = fig2.add_subplot(1, 1, 1)
+        fig2.tight_layout()
+
+        ax2.pie(sizes, labels=labels, autopct='%1.1f%%')
+
+        graph2 = FigureCanvasTkAgg(fig2, master=self.pieChartFrame)
+        canvas2 = graph2.get_tk_widget()
+        canvas2.grid(row=0, column=0)
+
+        #FuncAnimation(fig, update_graph, interval=2000)
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
