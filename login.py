@@ -584,6 +584,7 @@ class TransactionView(tk.Frame):
         ]
         '''
         self.data = self.db.getTransactions((self.id,))
+        print(self.data)
 
         # Configure alternating row colors
         '''
@@ -831,6 +832,9 @@ class ReportView(tk.Frame):
         self.config(bg="#4B41D7")
         self.place(x=20,y=120) #115
 
+        self.db = Database()
+        self.id = id
+
         # AddTransaction button
         self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
         self.ChangeMonthBackButton.place(x=246,y=330) #115.5
@@ -882,6 +886,21 @@ class ReportView(tk.Frame):
 
         #FuncAnimation(fig, update_graph, interval=2000)
 
+        #self.transactionStats()
+
+    def transactionStats(self):
+        allTransactions = self.db.getTransactions((self.id,))
+        monthlyExpenses = {}
+        monthlyIncome = {}
+        for transaction in allTransactions :
+            month = transaction[0].split("-")[1]
+            if(transaction[1]=='Expense'):
+                totalExpense = monthlyExpenses[month] + transaction[2] if month in monthlyExpenses else transaction[2]
+                monthlyExpenses[month] = totalExpense
+            else:
+                totalIncome = monthlyIncome[month] + transaction[2] if month in monthlyIncome else transaction[2]
+                monthlyIncome[month] = totalIncome
+        
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
