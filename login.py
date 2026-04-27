@@ -67,7 +67,6 @@ class Database:
         self.insertBudget(("car", 100.0))
         self.insertBudget(("shopping", 150.0))
         #self.insertBudget(("blood", 150.0))
-        print(self.getBudget("user"))
         self.conn.commit()
 
     """
@@ -164,8 +163,6 @@ class Database:
         # Commit the changes made to the database
         self.conn.commit()
 
-        print(5)
-
     """
     Method : gets all usernames from the `user` table.
     Returns : string[].
@@ -216,8 +213,6 @@ class Database:
         # Commit the changes made to the database
         self.conn.commit()
 
-        print(5)
-
     """
     Method : gets all transactions from the `transaction` table.
     Returns : string[].
@@ -243,8 +238,6 @@ class Database:
 
         # Commit the changes made to the database
         self.conn.commit()
-
-        print(5)
 
     """
     Method : gets all budget amounts corresponding to a user from the `budget` table.
@@ -295,8 +288,6 @@ class Database:
 
         # Commit the changes made to the database
         self.conn.commit()
-
-        print(5)
 
     """
     Method : gets the budget amount corresponding to a category from the `budget` table.
@@ -585,7 +576,6 @@ class TransactionView(tk.Frame):
         ]
         '''
         self.data = self.db.getTransactions((self.id,))
-        print(self.data)
 
         # Configure alternating row colors
         '''
@@ -654,7 +644,6 @@ class BudgetView(tk.Frame):
 
         # Sample data
         self.data = self.db.getBudget(self.id)
-        print(self.data)
         self.cleanData = []
         for data in self.data :
             dataList = list(data)
@@ -664,7 +653,7 @@ class BudgetView(tk.Frame):
                 dataList[1]=data[1]
             dataList.append(self.db.getCategoryExpenses(dataList[0])[0][0])
             self.cleanData.append(tuple(dataList))
-        print(self.cleanData)
+
         # Configure alternating row colors
         '''
         self.table.tag_configure('oddrow', background="#5F07EC")
@@ -683,7 +672,7 @@ class BudgetView(tk.Frame):
             else:
                 self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
         '''
-        print(type(self.cleanData[0][2]))
+
         # Add data with alternating row colors
         for i in range(len(self.cleanData)):
             self.table.insert(parent='', index=i, values=self.cleanData[i], 
@@ -735,8 +724,6 @@ class BudgetView(tk.Frame):
 
     def selectItem(self, a):
         curItem = self.table.focus()
-        print(self.table.item(curItem)["values"])
-        print(self.db.getCategoryExpenses(self.table.item(curItem)["values"][0]))
         self.ModifiyBudget.config(state=tk.NORMAL)
 
     def deselectItem(self, a):
@@ -821,7 +808,6 @@ class CategoryAdd(tk.Frame):
             try:
                 self.db.insertCategory((description, color, self.id))
                 self.db.insertBudget((description, -1))
-                print(self.id)
                 self.root.refresh()
             except:
                 messagebox.showinfo("Failure", "Please insert a non-existant description!")
@@ -894,30 +880,31 @@ class ReportView(tk.Frame):
         monthDict = []
         for i in range(len(list_of_months)-1):
             monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
+        return monthDict
 
     def transactionStats(self):
         allTransactions = self.db.getTransactions((self.id,))
-        monthlyExpenses = {}
-        monthlyIncome = {}
+        yearlyExpenses = {}
+        yearlyIncome = {}
         for transaction in allTransactions :
-            year = transaction[0].split("-")[2]
-            month = transaction[0].split("-")[1]
-            day = transaction[0].split("-")[0]
+            year = int(transaction[0].split("-")[2])
+            month = int(transaction[0].split("-")[1])
+            day = int(transaction[0].split("-")[0])
             if(transaction[1]=='Expense'):
-                #totalExpense = monthlyExpenses[month] + transaction[2] if month in monthlyExpenses else transaction[2]
-                #monthlyExpenses[month] = totalExpense
-                if(month not in monthlyExpenses):
-                    monthlyExpenses[month] = {}
-                dailyExpense = monthlyExpenses[month][day] + transaction[2] if day in monthlyExpenses[month] else transaction[2] 
-                monthlyExpenses[month][day] = dailyExpense
+                if(year not in yearlyExpenses):
+                    yearlyExpenses[year] = {}
+                if(month not in yearlyExpenses[year]):
+                    yearlyExpenses[year][month] = {}
+                dailyExpense = yearlyExpenses[year][month][day] + transaction[2] if day in yearlyExpenses[year][month] else transaction[2] 
+                yearlyExpenses[year][month][day] = dailyExpense
             else:
-                #totalIncome = monthlyIncome[month] + transaction[2] if month in monthlyIncome else transaction[2]
-                #monthlyIncome[month] = totalIncome
-                if(month not in monthlyIncome):
-                    monthlyIncome[month] = {}
-                dailyIncome = monthlyIncome[month][day] + transaction[2] if day in monthlyIncome[month] else transaction[2] 
-                monthlyIncome[month][day] = dailyIncome
-        print("hey", monthlyExpenses, monthlyIncome)
+                if(year not in yearlyIncome):
+                    yearlyIncome[year] = {}
+                if(month not in yearlyIncome[year]):
+                    yearlyIncome[year][month] = {}
+                dailyIncome = yearlyIncome[year][month][day] + transaction[2] if day in yearlyIncome[year][month] else transaction[2] 
+                yearlyIncome[year][month][day] = dailyIncome
+        return yearlyExpenses, yearlyIncome
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
@@ -1024,7 +1011,6 @@ class MainBackground(tk.Frame):
         #Updating the balance
         currentBalance = float(self.db.getUserBalance((self.id,))[0][0])
         currentBalance = currentBalance + amount
-        print(currentBalance)
         self.db.setUserBalance((currentBalance, self.id))
         self.balanceAmountLabel['text'] = str(currentBalance)
 
