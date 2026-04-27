@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 from matplotlib import style
+import calendar
 
 class Database:
 
@@ -886,21 +887,37 @@ class ReportView(tk.Frame):
 
         #FuncAnimation(fig, update_graph, interval=2000)
 
-        #self.transactionStats()
+        self.transactionStats()
 
     def transactionStats(self):
         allTransactions = self.db.getTransactions((self.id,))
         monthlyExpenses = {}
         monthlyIncome = {}
         for transaction in allTransactions :
+            year = transaction[0].split("-")[2]
             month = transaction[0].split("-")[1]
+            day = transaction[0].split("-")[0]
+            list_of_months = list(calendar.month_name)[1:]
+            #print(calendar.monthrange(2023, 1))
+            monthDict = []
+            for i in range(len(list_of_months)-1):
+                monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
             if(transaction[1]=='Expense'):
-                totalExpense = monthlyExpenses[month] + transaction[2] if month in monthlyExpenses else transaction[2]
-                monthlyExpenses[month] = totalExpense
+                #totalExpense = monthlyExpenses[month] + transaction[2] if month in monthlyExpenses else transaction[2]
+                #monthlyExpenses[month] = totalExpense
+                if(month not in monthlyExpenses):
+                    monthlyExpenses[month] = {}
+                dailyExpense = monthlyExpenses[month][day] + transaction[2] if day in monthlyExpenses[month] else transaction[2] 
+                monthlyExpenses[month][day] = dailyExpense
             else:
-                totalIncome = monthlyIncome[month] + transaction[2] if month in monthlyIncome else transaction[2]
-                monthlyIncome[month] = totalIncome
-        
+                #totalIncome = monthlyIncome[month] + transaction[2] if month in monthlyIncome else transaction[2]
+                #monthlyIncome[month] = totalIncome
+                if(month not in monthlyIncome):
+                    monthlyIncome[month] = {}
+                dailyIncome = monthlyIncome[month][day] + transaction[2] if day in monthlyIncome[month] else transaction[2] 
+                monthlyIncome[month][day] = dailyIncome
+        print("hey", monthlyExpenses, monthlyIncome)
+
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
         self.db = Database()
