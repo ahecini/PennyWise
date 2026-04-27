@@ -889,6 +889,12 @@ class ReportView(tk.Frame):
 
         self.transactionStats()
 
+    def calendarGeneration(year):
+        list_of_months = list(calendar.month_name)[1:]
+        monthDict = []
+        for i in range(len(list_of_months)-1):
+            monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
+
     def transactionStats(self):
         allTransactions = self.db.getTransactions((self.id,))
         monthlyExpenses = {}
@@ -897,11 +903,6 @@ class ReportView(tk.Frame):
             year = transaction[0].split("-")[2]
             month = transaction[0].split("-")[1]
             day = transaction[0].split("-")[0]
-            list_of_months = list(calendar.month_name)[1:]
-            #print(calendar.monthrange(2023, 1))
-            monthDict = []
-            for i in range(len(list_of_months)-1):
-                monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
             if(transaction[1]=='Expense'):
                 #totalExpense = monthlyExpenses[month] + transaction[2] if month in monthlyExpenses else transaction[2]
                 #monthlyExpenses[month] = totalExpense
