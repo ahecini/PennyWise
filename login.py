@@ -822,58 +822,33 @@ class ReportView(tk.Frame):
         self.db = Database()
         self.id = id
 
+        expenses, income = self.transactionStats(2026,4)
+
+        self.chartFrame = tk.Frame(self, width=300, height=220)
+        self.chartFrame.config(bg="#D74B41")
+        self.chartFrame.place(x=10,y=10) #115
+        self.chartFrame.tkraise()
+        
+        self.pieChartFrame = tk.Frame(self, width=300, height=220)
+        self.pieChartFrame.config(bg="#D74B41")
+        self.pieChartFrame.place(x=430,y=10) #115
+
         # AddTransaction button
-        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
+        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15, command=lambda: self.create_graph(expenses))
         self.ChangeMonthBackButton.place(x=246,y=330) #115.5
 
         # Category area
-        self.monthLabel = ttk.Label(self, text="April 2026", font=('Segoe UI', 15), background="#4B41D7")
+        self.monthLabel = ttk.Label(self, text="April-2026", font=('Segoe UI', 15), background="#4B41D7")
         self.monthLabel.place(x=386,y=325) 
 
         # AddTransaction button
         self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
 
-        self.chartFrame = tk.Frame(self, width=300, height=220)
-        self.chartFrame.config(bg="#D74B41")
-        self.chartFrame.place(x=10,y=10) #115
-
-        y = [i*randint(1,300) for i in range(32)]
-
-        style.use("_mpl-gallery")
-        fig = Figure(figsize=(4, 3), dpi=100)
-        ax1 = fig.add_subplot(1, 1, 1)
-        ax1.set_xlabel('Day')
-        ax1.set_ylabel('Amount', color='g')
-        fig.tight_layout()
-
-        ax1.plot(y)
-
-        graph = FigureCanvasTkAgg(fig, master=self.chartFrame)
-        canvas = graph.get_tk_widget()
-        canvas.grid(row=0, column=0)
-
-        self.pieChartFrame = tk.Frame(self, width=300, height=220)
-        self.pieChartFrame.config(bg="#D74B41")
-        self.pieChartFrame.place(x=430,y=10) #115
-
-        labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
-        sizes = [15, 30, 45, 10]
-
-        style.use("_mpl-gallery")
-        fig2 = Figure(figsize=(3.8, 3), dpi=100)
-        ax2 = fig2.add_subplot(1, 1, 1)
-        fig2.tight_layout()
-
-        ax2.pie(sizes, labels=labels, autopct='%1.1f%%')
-
-        graph2 = FigureCanvasTkAgg(fig2, master=self.pieChartFrame)
-        canvas2 = graph2.get_tk_widget()
-        canvas2.grid(row=0, column=0)
-
+        self.create_graph(income)
         #FuncAnimation(fig, update_graph, interval=2000)
 
-        self.transactionStats()
+        #self.transactionStats()
 
     def calendarGeneration(year):
         list_of_months = list(calendar.month_name)[1:]
@@ -882,7 +857,7 @@ class ReportView(tk.Frame):
             monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
         return monthDict
 
-    def transactionStats(self):
+    def transactionStats(self, chosenYear, chosenMonth):
         allTransactions = self.db.getTransactions((self.id,))
         yearlyExpenses = {}
         yearlyIncome = {}
@@ -904,7 +879,54 @@ class ReportView(tk.Frame):
                     yearlyIncome[year][month] = {}
                 dailyIncome = yearlyIncome[year][month][day] + transaction[2] if day in yearlyIncome[year][month] else transaction[2] 
                 yearlyIncome[year][month][day] = dailyIncome
-        return yearlyExpenses, yearlyIncome
+        #return yearlyExpenses[chosenYear][chosenMonth], yearlyIncome[chosenYear][chosenMonth]
+        return yearlyExpenses.get(chosenYear,{}).get(chosenMonth,{}), yearlyIncome.get(chosenYear,{}).get(chosenMonth,{})
+
+    def create_graph(self, data):
+
+        style.use("_mpl-gallery")
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax1 = self.fig.add_subplot(1, 1, 1)
+        self.ax1.set_xlabel('Day')
+        self.ax1.set_ylabel('Amount', color='g')
+        self.fig.tight_layout()
+
+        self.ax1.bar(list(data.keys()), list(data.values()))
+
+        self.graph = FigureCanvasTkAgg(self.fig, master=self.chartFrame)
+        self.canvas = self.graph.get_tk_widget()
+        self.canvas.grid(row=0, column=0)
+
+        self.labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
+        self.sizes = [15, 30, 45, 10]
+
+        style.use("_mpl-gallery")
+        self.fig2 = Figure(figsize=(3.8, 3), dpi=100)
+        self.ax2 = self.fig2.add_subplot(1, 1, 1)
+        self.fig2.tight_layout()
+
+        self.ax2.pie(self.sizes, labels=self.labels, autopct='%1.1f%%')
+
+        self.graph2 = FigureCanvasTkAgg(self.fig2, master=self.pieChartFrame)
+        self.canvas2 = self.graph2.get_tk_widget()
+        self.canvas2.grid(row=0, column=0)
+
+        print(data)
+
+    '''
+    def transactionData(self, month, year):
+        yearlyExpenses, yearlyIncome = self.transactionStats()
+        calendarDays = self.calendarGeneration(year)
+        data = []
+    '''
+
+    def destroyFrame(self):
+        try:
+            self.ax1.remove()
+            self.ax2.remove()
+            print(15)
+        except:
+            pass
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
