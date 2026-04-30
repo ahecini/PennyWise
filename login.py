@@ -828,13 +828,13 @@ class ReportView(tk.Frame):
         self.chartFrame.config(bg="#D74B41")
         self.chartFrame.place(x=10,y=10) #115
         self.chartFrame.tkraise()
-        
+
         self.pieChartFrame = tk.Frame(self, width=300, height=220)
         self.pieChartFrame.config(bg="#D74B41")
         self.pieChartFrame.place(x=430,y=10) #115
 
         # AddTransaction button
-        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15, command=lambda: self.create_graph(expenses))
+        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
         self.ChangeMonthBackButton.place(x=246,y=330) #115.5
 
         # Category area
@@ -845,7 +845,15 @@ class ReportView(tk.Frame):
         self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
 
+        self.setIncomeButton = ttk.Button(self, text="income", bootstyle='info', command=lambda: self.setIncome(income))
+        self.setIncomeButton.place(x=120, y=330)
+
+        self.setExpensesButton = ttk.Button(self, text="expenses", bootstyle='info', command=lambda: self.setExpenses(expenses))
+        self.setExpensesButton.place(x=30, y=330)
+
         self.create_graph(income)
+        self.setIncomeButton.config(state=tk.DISABLED)
+        
         #FuncAnimation(fig, update_graph, interval=2000)
 
         #self.transactionStats()
@@ -911,8 +919,6 @@ class ReportView(tk.Frame):
         self.canvas2 = self.graph2.get_tk_widget()
         self.canvas2.grid(row=0, column=0)
 
-        print(data)
-
     '''
     def transactionData(self, month, year):
         yearlyExpenses, yearlyIncome = self.transactionStats()
@@ -920,13 +926,15 @@ class ReportView(tk.Frame):
         data = []
     '''
 
-    def destroyFrame(self):
-        try:
-            self.ax1.remove()
-            self.ax2.remove()
-            print(15)
-        except:
-            pass
+    def setIncome(self, data):
+        self.setIncomeButton.config(state=tk.DISABLED)
+        self.setExpensesButton.config(state=tk.NORMAL)
+        self.create_graph(data)
+
+    def setExpenses(self, data):
+        self.setExpensesButton.config(state=tk.DISABLED)
+        self.setIncomeButton.config(state=tk.NORMAL)
+        self.create_graph(data)
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
