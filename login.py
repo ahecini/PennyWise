@@ -822,7 +822,8 @@ class ReportView(tk.Frame):
         self.db = Database()
         self.id = id
 
-        expenses, income = self.transactionStats(2026,4)
+        barChartExpenses, barChartIncome = self.transactionStats(2026,4)
+        pieChartExpenses, pieChartIncome = self.categoryStats()
 
         self.chartFrame = tk.Frame(self, width=300, height=220)
         self.chartFrame.config(bg="#D74B41")
@@ -845,15 +846,15 @@ class ReportView(tk.Frame):
         self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
 
-        self.setIncomeButton = ttk.Button(self, text="income", bootstyle='info', command=lambda: self.setIncome(income))
+        self.setIncomeButton = ttk.Button(self, text="income", bootstyle='info', command=lambda: self.setIncome(barChartIncome, pieChartIncome))
         self.setIncomeButton.place(x=120, y=330)
 
-        self.setExpensesButton = ttk.Button(self, text="expenses", bootstyle='info', command=lambda: self.setExpenses(expenses))
+        self.setExpensesButton = ttk.Button(self, text="expenses", bootstyle='info', command=lambda: self.setExpenses(barChartExpenses, pieChartExpenses))
         self.setExpensesButton.place(x=30, y=330)
 
-        self.create_graph(income)
+        self.create_graph(barChartIncome, pieChartIncome)
         self.setIncomeButton.config(state=tk.DISABLED)
-        
+
         #FuncAnimation(fig, update_graph, interval=2000)
 
         #self.transactionStats()
@@ -890,8 +891,26 @@ class ReportView(tk.Frame):
         #return yearlyExpenses[chosenYear][chosenMonth], yearlyIncome[chosenYear][chosenMonth]
         return yearlyExpenses.get(chosenYear,{}).get(chosenMonth,{}), yearlyIncome.get(chosenYear,{}).get(chosenMonth,{})
 
-    def create_graph(self, data):
+    def categoryStats(self):
+        allTransactions = self.db.getTransactions((self.id,))
+        incomeCategoryPercentage = {}
+        expensesCategoryPercentage = {}
+        incomeCategoryCount = 0
+        expensesCategoryCount = 0
+        for transaction in allTransactions :
+            if(transaction[1]=='Income'):
+                incomeCategoryPercentage[transaction[3]] = incomeCategoryPercentage[transaction[3]] + 1 if transaction[3] in incomeCategoryPercentage else 1
+                incomeCategoryCount = incomeCategoryCount + 1
+            else:    
+                expensesCategoryPercentage[transaction[3]] = expensesCategoryPercentage[transaction[3]] + 1 if transaction[3] in expensesCategoryPercentage else 1
+                expensesCategoryCount = expensesCategoryCount + 1
+        for category in incomeCategoryPercentage.keys() :
+            incomeCategoryPercentage[category] = incomeCategoryPercentage[category]*100/incomeCategoryCount
+        for category in expensesCategoryPercentage.keys() :
+            expensesCategoryPercentage[category] = expensesCategoryPercentage[category]*100/expensesCategoryCount
+        return expensesCategoryPercentage, incomeCategoryPercentage
 
+    def create_graph(self, barChartData, pieChartData):
         style.use("_mpl-gallery")
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax1 = self.fig.add_subplot(1, 1, 1)
@@ -899,7 +918,7 @@ class ReportView(tk.Frame):
         self.ax1.set_ylabel('Amount', color='g')
         self.fig.tight_layout()
 
-        self.ax1.bar(list(data.keys()), list(data.values()))
+        self.ax1.bar(list(barChartData.keys()), list(barChartData.values()))
 
         self.graph = FigureCanvasTkAgg(self.fig, master=self.chartFrame)
         self.canvas = self.graph.get_tk_widget()
@@ -913,7 +932,7 @@ class ReportView(tk.Frame):
         self.ax2 = self.fig2.add_subplot(1, 1, 1)
         self.fig2.tight_layout()
 
-        self.ax2.pie(self.sizes, labels=self.labels, autopct='%1.1f%%')
+        self.ax2.pie(pieChartData.values(), labels=pieChartData.keys(), autopct='%1.1f%%')
 
         self.graph2 = FigureCanvasTkAgg(self.fig2, master=self.pieChartFrame)
         self.canvas2 = self.graph2.get_tk_widget()
@@ -926,15 +945,15 @@ class ReportView(tk.Frame):
         data = []
     '''
 
-    def setIncome(self, data):
+    def setIncome(self, barChartData, pieChartData):
         self.setIncomeButton.config(state=tk.DISABLED)
         self.setExpensesButton.config(state=tk.NORMAL)
-        self.create_graph(data)
+        self.create_graph(barChartData, pieChartData)
 
-    def setExpenses(self, data):
+    def setExpenses(self, barChartData, pieChartData):
         self.setExpensesButton.config(state=tk.DISABLED)
         self.setIncomeButton.config(state=tk.NORMAL)
-        self.create_graph(data)
+        self.create_graph(barChartData, pieChartData)
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
