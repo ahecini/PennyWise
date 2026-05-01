@@ -823,7 +823,7 @@ class ReportView(tk.Frame):
         self.id = id
 
         barChartExpenses, barChartIncome = self.transactionStats(2026,4)
-        pieChartExpenses, pieChartIncome = self.categoryStats()
+        pieChartExpenses, pieChartIncome = self.categoryStats(2026,4)
 
         self.chartFrame = tk.Frame(self, width=300, height=220)
         self.chartFrame.config(bg="#D74B41")
@@ -891,24 +891,26 @@ class ReportView(tk.Frame):
         #return yearlyExpenses[chosenYear][chosenMonth], yearlyIncome[chosenYear][chosenMonth]
         return yearlyExpenses.get(chosenYear,{}).get(chosenMonth,{}), yearlyIncome.get(chosenYear,{}).get(chosenMonth,{})
 
-    def categoryStats(self):
+    def categoryStats(self, chosenYear, chosenMonth):
         allTransactions = self.db.getTransactions((self.id,))
         incomeCategoryPercentage = {}
         expensesCategoryPercentage = {}
-        incomeCategoryCount = 0
-        expensesCategoryCount = 0
         for transaction in allTransactions :
+            year = int(transaction[0].split("-")[2])
+            month = int(transaction[0].split("-")[1])
             if(transaction[1]=='Income'):
-                incomeCategoryPercentage[transaction[3]] = incomeCategoryPercentage[transaction[3]] + 1 if transaction[3] in incomeCategoryPercentage else 1
-                incomeCategoryCount = incomeCategoryCount + 1
+                if(year not in incomeCategoryPercentage):
+                    incomeCategoryPercentage[year] = {}
+                if(month not in incomeCategoryPercentage[year]):
+                    incomeCategoryPercentage[year][month] = {}
+                incomeCategoryPercentage[year][month][transaction[3]] = incomeCategoryPercentage[year][month][transaction[3]] + 1 if transaction[3] in incomeCategoryPercentage[year][month] else 1
             else:    
-                expensesCategoryPercentage[transaction[3]] = expensesCategoryPercentage[transaction[3]] + 1 if transaction[3] in expensesCategoryPercentage else 1
-                expensesCategoryCount = expensesCategoryCount + 1
-        for category in incomeCategoryPercentage.keys() :
-            incomeCategoryPercentage[category] = incomeCategoryPercentage[category]*100/incomeCategoryCount
-        for category in expensesCategoryPercentage.keys() :
-            expensesCategoryPercentage[category] = expensesCategoryPercentage[category]*100/expensesCategoryCount
-        return expensesCategoryPercentage, incomeCategoryPercentage
+                if(year not in expensesCategoryPercentage):
+                    expensesCategoryPercentage[year] = {}
+                if(month not in expensesCategoryPercentage[year]):
+                    expensesCategoryPercentage[year][month] = {}
+                expensesCategoryPercentage[year][month][transaction[3]] = expensesCategoryPercentage[year][month][transaction[3]] + 1 if transaction[3] in expensesCategoryPercentage[year][month] else 1
+        return expensesCategoryPercentage.get(chosenYear,{}).get(chosenMonth,{}), incomeCategoryPercentage.get(chosenYear,{}).get(chosenMonth,{})
 
     def create_graph(self, barChartData, pieChartData):
         style.use("_mpl-gallery")
