@@ -822,9 +822,6 @@ class ReportView(tk.Frame):
         self.db = Database()
         self.id = id
 
-        barChartExpenses, barChartIncome = self.transactionStats(2026,4)
-        pieChartExpenses, pieChartIncome = self.categoryStats(2026,4)
-
         self.chartFrame = tk.Frame(self, width=300, height=220)
         self.chartFrame.config(bg="#D74B41")
         self.chartFrame.place(x=10,y=10) #115
@@ -839,12 +836,16 @@ class ReportView(tk.Frame):
         self.ChangeMonthBackButton.place(x=246,y=330) #115.5
 
         # Category area
-        self.monthLabel = ttk.Label(self, text="April-2026", font=('Segoe UI', 15), background="#4B41D7")
+        self.monthLabel = ttk.Label(self, text=self.currentMonthYear(), font=('Segoe UI', 15), background="#4B41D7")
         self.monthLabel.place(x=386,y=325) 
 
         # AddTransaction button
         self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
+
+        # Chart generation area
+        barChartExpenses, barChartIncome = self.transactionStats(2026,4)
+        pieChartExpenses, pieChartIncome = self.categoryStats(2026,4)
 
         self.setIncomeButton = ttk.Button(self, text="income", bootstyle='info', command=lambda: self.setIncome(barChartIncome, pieChartIncome))
         self.setIncomeButton.place(x=120, y=330)
@@ -855,16 +856,27 @@ class ReportView(tk.Frame):
         self.create_graph(barChartIncome, pieChartIncome)
         self.setIncomeButton.config(state=tk.DISABLED)
 
-        #FuncAnimation(fig, update_graph, interval=2000)
+        print(self.currentMonthYear())
+        print(self.monthYearNumerical(self.monthLabel.cget("text")))
 
-        #self.transactionStats()
-
-    def calendarGeneration(year):
+    def calendarGeneration(self, year):
         list_of_months = list(calendar.month_name)[1:]
-        monthDict = []
-        for i in range(len(list_of_months)-1):
-            monthDict.append({'month':list_of_months[i], 'days':calendar.monthrange(int(year), i+1)[1]})
+        monthDict = {}
+        for i in range(len(list_of_months)):
+            monthDict[list_of_months[i]] = calendar.monthrange(int(year), i+1)[1]
         return monthDict
+
+    def currentMonthYear(self):
+        list_of_months = list(calendar.month_name)[1:]
+        current_month = datetime.datetime.now().month
+        return list_of_months[current_month-1] + "-" + str(datetime.datetime.now().year)  
+    
+    def monthYearNumerical(self, monthYearString):
+        monthYearStringList = monthYearString.split("-")
+        list_of_months = list(calendar.month_name)[1:]
+        chosenMonth = list_of_months.index(monthYearStringList[0]) + 1
+        chosenYear = int(monthYearStringList[1])
+        return chosenMonth, chosenYear
 
     def transactionStats(self, chosenYear, chosenMonth):
         allTransactions = self.db.getTransactions((self.id,))
