@@ -845,8 +845,9 @@ class ReportView(tk.Frame):
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
 
         # Chart generation area
-        barChartExpenses, barChartIncome = self.transactionStats(2026,4)
-        pieChartExpenses, pieChartIncome = self.categoryStats(2026,4)
+        month, year = self.monthYearNumerical(self.currentMonthYear())
+        barChartExpenses, barChartIncome = self.transactionStats(year,month)
+        pieChartExpenses, pieChartIncome = self.categoryStats(year,month)
 
         self.setIncomeButton = ttk.Button(self, text="income", bootstyle='info', command=lambda: self.setIncome(barChartIncome, pieChartIncome))
         self.setIncomeButton.place(x=120, y=330)
@@ -985,11 +986,24 @@ class ReportView(tk.Frame):
         index = self.monthYearList.index(self.monthLabel.cget("text"))
         index = index - 1 if index>0 else index
         self.monthLabel['text'] = self.monthYearList[index]
+        self.refreshCharts(index)
 
     def changeMonthForward(self):
         index = self.monthYearList.index(self.monthLabel.cget("text"))
         index = index + 1 if index<len(self.monthYearList)-1 else index
         self.monthLabel['text'] = self.monthYearList[index]
+        self.refreshCharts(index)
+
+    def refreshCharts(self, index):
+        month, year = self.monthYearNumerical(self.monthYearList[index])
+        barChartExpenses, barChartIncome = self.transactionStats(year, month)
+        pieChartExpenses, pieChartIncome = self.categoryStats(year, month)
+        self.setIncomeButton['command'] = lambda: self.setIncome(barChartIncome, pieChartIncome)
+        self.setExpensesButton['command'] = lambda: self.setExpenses(barChartExpenses, pieChartExpenses)
+        self.create_graph(barChartIncome, pieChartIncome)
+        self.setExpensesButton.config(state=tk.NORMAL)
+        self.setIncomeButton.config(state=tk.NORMAL)
+        self.setIncomeButton.config(state=tk.DISABLED)
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
