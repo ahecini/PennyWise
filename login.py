@@ -821,7 +821,8 @@ class ReportView(tk.Frame):
 
         self.db = Database()
         self.id = id
-
+        self.monthYearList = self.getMonthYearList()
+        print(self.monthYearList.index(self.currentMonthYear()))
         self.chartFrame = tk.Frame(self, width=300, height=220)
         self.chartFrame.config(bg="#D74B41")
         self.chartFrame.place(x=10,y=10) #115
@@ -832,7 +833,7 @@ class ReportView(tk.Frame):
         self.pieChartFrame.place(x=430,y=10) #115
 
         # AddTransaction button
-        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15)
+        self.ChangeMonthBackButton = ttk.Button(self, text="◀️", bootstyle="success", width=15, command=lambda:self.changeMonthBack())
         self.ChangeMonthBackButton.place(x=246,y=330) #115.5
 
         # Category area
@@ -840,7 +841,7 @@ class ReportView(tk.Frame):
         self.monthLabel.place(x=386,y=325) 
 
         # AddTransaction button
-        self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15)
+        self.ChangeMonthForwardButton = ttk.Button(self, text="▶️", bootstyle="success", width=15, command=lambda:self.changeMonthForward())
         self.ChangeMonthForwardButton.place(x=500,y=330) #115.5
 
         # Chart generation area
@@ -858,6 +859,7 @@ class ReportView(tk.Frame):
 
         print(self.currentMonthYear())
         print(self.monthYearNumerical(self.monthLabel.cget("text")))
+        print(self.getMonthYearList())
 
     def calendarGeneration(self, year):
         list_of_months = list(calendar.month_name)[1:]
@@ -877,6 +879,16 @@ class ReportView(tk.Frame):
         chosenMonth = list_of_months.index(monthYearStringList[0]) + 1
         chosenYear = int(monthYearStringList[1])
         return chosenMonth, chosenYear
+    
+    def getMonthYearList(self):
+        list_of_months = list(calendar.month_name)[1:]
+        allTransactions = self.db.getTransactions((self.id,))
+        monthYearList = []
+        for transaction in allTransactions :
+            year = int(transaction[0].split("-")[2])
+            month = int(transaction[0].split("-")[1])
+            monthYearList.append(list_of_months[month-1] + "-" + str(year))
+        return list(dict.fromkeys(monthYearList))
 
     def transactionStats(self, chosenYear, chosenMonth):
         allTransactions = self.db.getTransactions((self.id,))
@@ -968,6 +980,16 @@ class ReportView(tk.Frame):
         self.setExpensesButton.config(state=tk.DISABLED)
         self.setIncomeButton.config(state=tk.NORMAL)
         self.create_graph(barChartData, pieChartData)
+
+    def changeMonthBack(self):
+        index = self.monthYearList.index(self.monthLabel.cget("text"))
+        index = index - 1 if index>0 else index
+        self.monthLabel['text'] = self.monthYearList[index]
+
+    def changeMonthForward(self):
+        index = self.monthYearList.index(self.monthLabel.cget("text"))
+        index = index + 1 if index<len(self.monthYearList)-1 else index
+        self.monthLabel['text'] = self.monthYearList[index]
 
 class MainBackground(tk.Frame):
     def __init__(self, root, id):
