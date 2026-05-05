@@ -944,8 +944,14 @@ class ReportView(tk.Frame):
         self.ax1.set_xlabel('Day')
         self.ax1.set_ylabel('Amount', color='g')
         self.fig.tight_layout()
-
-        self.ax1.bar(list(barChartData.keys()), list(barChartData.values()))
+        
+        barChartDataInitialX = list(barChartData.keys())
+        barChartDataInitialY = list(barChartData.values())
+        barChartDataX = [i for i in range(1,32)]
+        barChartDataY = [0*i for i in range(1,32)]
+        for x in range(len(barChartDataInitialX)) :
+            barChartDataY[barChartDataInitialX[x]] = barChartDataInitialY[x]
+        self.ax1.bar(barChartDataX, barChartDataY)
 
         self.graph = FigureCanvasTkAgg(self.fig, master=self.chartFrame)
         self.canvas = self.graph.get_tk_widget()
