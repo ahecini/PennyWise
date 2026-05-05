@@ -536,7 +536,7 @@ class TransactionAdd(tk.Frame):
             self.root.updateBalance(operationType*amount)
             expenses = self.db.getCategoryExpenses((category))[0][0]
             budget = self.db.getBudgetAmount((category))[0][0]
-            if(expenses>=budget):
+            if(expenses>=budget and budget>=0):
                 messagebox.showinfo("Warning!", "A budget was not respected. Please check the budget table")
 
 class TransactionView(tk.Frame):
@@ -944,7 +944,7 @@ class ReportView(tk.Frame):
         self.ax1.set_xlabel('Day')
         self.ax1.set_ylabel('Amount', color='g')
         self.fig.tight_layout()
-        
+
         barChartDataInitialX = list(barChartData.keys())
         barChartDataInitialY = list(barChartData.values())
         barChartDataX = [i for i in range(1,32)]
