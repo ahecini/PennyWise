@@ -536,7 +536,7 @@ class TransactionAdd(tk.Frame):
             self.root.updateBalance(operationType*amount)
             expenses = self.db.getCategoryExpenses((category))[0][0]
             budget = self.db.getBudgetAmount((category))[0][0]
-            if(expenses>=budget):
+            if(expenses>=budget and budget>=0):
                 messagebox.showinfo("Warning!", "A budget was not respected. Please check the budget table")
 
 class TransactionView(tk.Frame):
@@ -672,12 +672,13 @@ class BudgetView(tk.Frame):
             else:
                 self.table.insert(parent='', index=i, values=self.data[i], tags=('oddrow',))
         '''
-
+        print("clean data",self.cleanData)
         # Add data with alternating row colors
         for i in range(len(self.cleanData)):
+            print("hey",self.cleanData[i][1],self.cleanData[i][2])
             self.table.insert(parent='', index=i, values=self.cleanData[i], 
                               tags=("Respected" 
-                                    if self.cleanData[i][1]>float(self.cleanData[i][2] if self.cleanData[i][2] is not None else 0.0) 
+                                    if isinstance(self.cleanData[i][1], str) or self.cleanData[i][1]>float(self.cleanData[i][2] if self.cleanData[i][2] is not None else 0.0) 
                                     else "Not-respected",))
             
         # Pack the table
@@ -822,7 +823,6 @@ class ReportView(tk.Frame):
         self.db = Database()
         self.id = id
         self.monthYearList = self.getMonthYearList()
-        print(self.monthYearList.index(self.currentMonthYear()))
         self.chartFrame = tk.Frame(self, width=300, height=220)
         self.chartFrame.config(bg="#D74B41")
         self.chartFrame.place(x=10,y=10) #115
@@ -945,7 +945,13 @@ class ReportView(tk.Frame):
         self.ax1.set_ylabel('Amount', color='g')
         self.fig.tight_layout()
 
-        self.ax1.bar(list(barChartData.keys()), list(barChartData.values()))
+        barChartDataInitialX = list(barChartData.keys())
+        barChartDataInitialY = list(barChartData.values())
+        barChartDataX = [i for i in range(1,32)]
+        barChartDataY = [0*i for i in range(1,32)]
+        for x in range(len(barChartDataInitialX)) :
+            barChartDataY[barChartDataInitialX[x]] = barChartDataInitialY[x]
+        self.ax1.bar(barChartDataX, barChartDataY)
 
         self.graph = FigureCanvasTkAgg(self.fig, master=self.chartFrame)
         self.canvas = self.graph.get_tk_widget()
