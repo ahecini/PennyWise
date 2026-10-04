@@ -16,14 +16,14 @@
 ## ⚙️ Features
 
 * Creating & using personal accounts.
-![Alternative description of the image](Images/1.png)
+![Alternative description of the image](images/1.png)
 
 * Entering transactions and showcasing them in a table.
-![Alternative description of the image](screenshots/2.jpg)
-![Alternative description of the image](screenshots/5.jpg)
+![Alternative description of the image](images/2.jpg)
+![Alternative description of the image](images/5.jpg)
 
 * Generating visual reports and statistics.
-![Alternative description of the image](screenshots/4.jpg)
+![Alternative description of the image](images/4.jpg)
 ---
 
 ## 🛠 Technical Stack
