@@ -15,19 +15,22 @@
 
 ## ⚙️ Features
 
-* Support for different quantum chemistry files (**cif**, **xyz**, **vasp**, **res** and **Poscar**/**USPEX**) + Relevant data extraction.
-![Alternative description of the image](screenshots/1.jpg)
+* Creating & using personal accounts.
+![Alternative description of the image](Images/1.png)
 
-* Classification of extracted data in interactive plots (energy/index or energy/generation plots).
-![Alternative description of the image](screenshots/3.jpg)
-
-* 3D visualization of cristalographic structures.
+* Entering transactions and showcasing them in a table.
 ![Alternative description of the image](screenshots/2.jpg)
+![Alternative description of the image](screenshots/5.jpg)
+
+* Generating visual reports and statistics.
+![Alternative description of the image](screenshots/4.jpg)
 ---
 
 ## 🛠 Technical Stack
 
-* **Language & Framework :** Python, Jupyter Notebook
-* **Libraries :** numpy, matplotlib, ase, pymatgen, tkinter
+* **Language & Framework :** Python
+* **Libraries :** matplotlib, ttkbootstrap, tkinter, sqlite3
 * **IDE :** Visual Studio Code, Spyder
 * **Versioning :** Git/GitHub
+* **Database :** SQLite
+* **Paradigm :** Object oriented
