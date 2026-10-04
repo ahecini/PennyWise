@@ -1,13 +1,10 @@
 # 💵 PennyWise — Know where your money at
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
-![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter&logoColor=white)
 ![NumPy](https://img.shields.io/badge/NumPy-1.26+-013243?logo=numpy&logoColor=white)
-![ASE](https://img.shields.io/badge/ASE-Atomic_Simulation_Environment-4B6584?logo=python&logoColor=white)
-![pymatgen](https://img.shields.io/badge/pymatgen-Materials_Genomics-2C3E50?logo=python&logoColor=white)
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c?logo=python&logoColor=white)
 
-> **Amethyst** is a Python application, used to classify, model and extract cristallographic data provided by quantum computing.
+> **PennyWise** is a Python application, used to manage expanses, income & budgeting using tables and visual reports.
 
 ---
 
