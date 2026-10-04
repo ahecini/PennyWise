@@ -1,8 +1,10 @@
 # 💵 PennyWise — Know where your money at
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
-![NumPy](https://img.shields.io/badge/NumPy-1.26+-013243?logo=numpy&logoColor=white)
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c?logo=python&logoColor=white)
+![ttkbootstrap](https://img.shields.io/badge/ttkbootstrap-1.10+-375a7f?logo=python&logoColor=white)
+![Tkinter](https://img.shields.io/badge/Tkinter-GUI-3776AB?logo=python&logoColor=white)
+![SQLite3](https://img.shields.io/badge/SQLite3-Built--in-003B57?logo=sqlite&logoColor=white)
 
 > **PennyWise** is a Python application, used to manage expanses, income & budgeting using tables and visual reports.
 
