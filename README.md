@@ -24,8 +24,12 @@
 ![Alternative description of the image](images/2.png)
 ![Alternative description of the image](images/5.png)
 
+* Setting budget limits for each category.
+![Alternative description of the image](images/6.png)
+
 * Generating visual reports and statistics.
 ![Alternative description of the image](images/4.png)
+
 ---
 
 ## 🛠 Technical Stack
